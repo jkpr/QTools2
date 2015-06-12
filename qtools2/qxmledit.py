@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # All the code needed for XML edits
 
 import re
@@ -153,7 +155,6 @@ class Xform():
     def newline_fix(self):
         self.data = [line.replace("&amp;#x", "&#x") for line in self.data]
 
-
 def process_hq_fq(hq_xform, fq_xform):
     hq_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
     
@@ -201,26 +202,53 @@ def process_sdp(sdp_xform):
     sdp_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
     sdp_fixed_bindings = insert_after.bind_instance_name.splitlines()
     sdp_xform.insert_above_bind(sdp_fixed_bindings)
-    rel_locations = [sdp_xform.rel_locations[0]]
-    sdp_instance_name = get_sdp_instance_name(rel_locations)
+    most_location = sdp_xform.rel_locations[0]
+    sdp_instance_name = get_sdp_instance_name(most_location)
     sdp_xform.insert_full_tag([sdp_instance_name], '<!-- instanceName -->', above=False)
     sdp_xform.newline_fix()
     sdp_xform.write()
 
 def process_listing(listing_xform):
-    print "Process listing stub"
+    listing_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
+    listing_fixed_bindings = insert_after.bind_instance_name.splitlines()
+    listing_xform.insert_above_bind(listing_fixed_bindings)
+    most_location = listing_xform.rel_locations[0]
+    listing_instance_name = get_listing_instance_name(most_location)
+    listing_xform.insert_full_tag([listing_instance_name], '<!-- instanceName -->', above=False)
+    listing_xform.newline_fix()
+    listing_xform.write()
+
 
 def process_selection(selection_xform):
-    print "Process selection stub"
+    selection_xform.newline_fix()
+    selection_xform.write()
 
 def process_rq(rq_xform):
-    print "Process RQ stub"
+    rq_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
+    rq_fixed_bindings = insert_after.bind_instance_name.splitlines()
+    rq_xform.insert_above_bind(rq_fixed_bindings)
+    rel_locations = rq_xform.rel_locations
+    rq_instance_name = get_rq_instance_name(rel_locations)
+    rq_xform.insert_full_tag([rq_instance_name], '<!-- instanceName -->', above=False)
+    rq_xform.newline_fix()
+    rq_xform.write()
+
+def get_rq_instance_name(rel_locations):
+    xpaths = ['string(/RQ/' + loc + ')' for loc in rel_locations]
+    concat_xpaths = ",'-',".join(xpaths)
+    rq_form_name = """<bind calculate="concat('RQ',':',%s)" nodeset="/RQ/meta/instanceName" type="string"/>"""
+    rq_form_name = rq_form_name % concat_xpaths
+    return rq_form_name
+
+def get_listing_instance_name(most_location):
+    listing_instance_name = """<bind calculate="if(/listing/HH_SDP = 'HH',concat('LIST:',/listing/%s,'-HH-',string(/listing/number_structure_HH)),concat('LIST:',/listing/%s,'-SDP-',string(/listing/number_SDP)))" nodeset="/listing/meta/instanceName" type="string"/>"""
+    listing_instance_name = listing_instance_name % (most_location, most_location)
+    return listing_instance_name
 
 
-def get_sdp_instance_name(rel_locations):
-    xpaths_unlinked = ['string(/SDP/' + loc + ')' for loc in rel_locations]
-    concat_xpaths = ",'-',".join(xpaths_unlinked)
+def get_sdp_instance_name(most_location):
     sdp_instance_name = """<bind calculate="concat('SDP',':',%s,'-',string(/SDP/facility_number))" nodeset="/SDP/meta/instanceName" type="string"/>"""
+    sdp_instance_name = sdp_instance_name % most_location
     return sdp_instance_name
 
 def get_frs_instance_name(rel_locations):

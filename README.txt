@@ -9,5 +9,5 @@ convert MS-Excel documents into XML. We just have to live with this annoyance.
 The two main modules are meant to be used as command line utilities. To learn 
 the usage, type::
 
-    python -m qxml --help
-    python -m qxmledit --help
+    python -m qtools2.qxml --help
+    python -m qtools2.qxmledit --help
