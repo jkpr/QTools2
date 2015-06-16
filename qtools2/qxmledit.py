@@ -179,7 +179,7 @@ def process_hq_fq(hq_xform, fq_xform):
     hhq_instance_name = get_hhq_instance_name(hq_xform.rel_locations)
     hq_xform.insert_full_tag([hhq_instance_name], '<!-- instanceName -->', above=False)
     loc_transfers = get_hq_location_transfer(hq_xform.locations)
-    hq_xform.insert_full_tag(transfers, '<!-- location data to push to FRS -->', above=False)
+    hq_xform.insert_full_tag(loc_transfers, '<!-- location data to push to FRS -->', above=False)
     hq_xform.write()
 
     ###### Now process FQ #######
