@@ -247,13 +247,13 @@ def get_rq_instance_name(rel_locations):
     return rq_form_name
 
 def get_listing_instance_name(most_location):
-    listing_instance_name = """<bind calculate="if(/listing/HH_SDP = 'HH',concat('LIST:',/listing/%s,'-HH-',string(/listing/number_structure_HH)),concat('LIST:',/listing/%s,'-SDP-',string(/listing/number_SDP)))" nodeset="/listing/meta/instanceName" type="string"/>"""
+    listing_instance_name = """<bind calculate="if(/listing/HH_SDP = 'HH',concat('LIST:',string(/listing/%s),'-HH-',string(/listing/number_structure_HH)),concat('LIST:',/listing/%s,'-SDP-',string(/listing/number_SDP)))" nodeset="/listing/meta/instanceName" type="string"/>"""
     listing_instance_name = listing_instance_name % (most_location, most_location)
     return listing_instance_name
 
 
 def get_sdp_instance_name(most_location):
-    sdp_instance_name = """<bind calculate="concat('SDP',':',%s,'-',string(/SDP/facility_number))" nodeset="/SDP/meta/instanceName" type="string"/>"""
+    sdp_instance_name = """<bind calculate="concat('SDP',':',string(/SDP/%s),'-',string(/SDP/facility_number))" nodeset="/SDP/meta/instanceName" type="string"/>"""
     sdp_instance_name = sdp_instance_name % most_location
     return sdp_instance_name
 
