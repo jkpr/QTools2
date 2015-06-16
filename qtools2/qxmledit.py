@@ -202,6 +202,7 @@ def process_hq_fq(hq_xform, fq_xform):
 def get_hq_location_transfer(locations):
     base_transfer = """<bind nodeset="/HHQ/HH_member/%s_transfer" calculate="/HHQ/%s" saveInstance="/FRS/location_information/%s" relevant="/HHQ/consent_obtained" required="true()" type="string"/>"""
     transfers = [base_transfer % (loc, loc, loc) for loc in locations]
+    return transfers
 
 def process_sdp(sdp_xform):
     sdp_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
