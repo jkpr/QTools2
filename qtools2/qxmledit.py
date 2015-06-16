@@ -178,7 +178,8 @@ def process_hq_fq(hq_xform, fq_xform):
     hq_xform.insert_full_tag([hhq_frs_form_name], '<!-- FRS_form_name -->', above=False)
     hhq_instance_name = get_hhq_instance_name(hq_xform.rel_locations)
     hq_xform.insert_full_tag([hhq_instance_name], '<!-- instanceName -->', above=False)
-
+    loc_transfers = get_hq_location_transfer(hq_xform.locations)
+    hq_xform.insert_full_tag(transfers, '<!-- location data to push to FRS -->', above=False)
     hq_xform.write()
 
     ###### Now process FQ #######
@@ -197,6 +198,10 @@ def process_hq_fq(hq_xform, fq_xform):
     fq_xform.insert_full_tag([frs_instance_name], '<!-- instanceName -->', above=False)
 
     fq_xform.write()
+
+def get_hq_location_transfer(locations):
+    base_transfer = """<bind nodeset="/HHQ/HH_member/%s_transfer" calculate="/HHQ/%s" saveInstance="/FRS/location_information/%s" relevant="/HHQ/consent_obtained" required="true()" type="string"/>"""
+    transfers = [base_transfer % (loc, loc, loc) for loc in locations]
 
 def process_sdp(sdp_xform):
     sdp_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
