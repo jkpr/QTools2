@@ -405,6 +405,6 @@ if __name__ == '__main__':
         print m
         sys.exit()
     elif args.suffix is None:
-        args.suffix = 'edited'
+        args.suffix = 'e'
 
     edit_all(args.xmlfile, args.overwrite, args.suffix)
