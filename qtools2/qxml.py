@@ -37,7 +37,7 @@ class FileChecker():
                 m = '### Fatal error: "%s" does not end with ".xlsx" or ".xls"' % short_file
                 raise TypeError(m)
 
-        self.xml_root, self.country_round, self.version = self.process_naming(name)
+        self.questionnaire_code, self.xml_root, self.country_round, self.version = self.process_naming(name)
 
         self.xls_copy = os.path.join(dir, self.xml_root + ext)
         self.xml_result = os.path.join(dir, self.xml_root + '.xml')
@@ -65,7 +65,7 @@ class FileChecker():
                 filtered = filter(None, form_id_col)
                 if filtered:
                     my_id = filtered[0]
-                    proposed_id = '-'.join([self.xml_root, self.country_round.lower(), self.version])
+                    proposed_id = '-'.join([self.questionnaire_code, self.country_round.lower(), self.version])
                     if my_id != proposed_id:
                         m = '### Fatal error: form_id "%s" does not match ODK filename "%s"' % (my_id, self.short_file)
                         raise NameError(m)
@@ -99,14 +99,14 @@ class FileChecker():
                 m = '### Fatal error: "form_title" column not found in [%s]"settings" !' % self.short_file
                 raise NameError(m)
         except NameError as e:
-            return [e.message]
+            return e.message
         except xlrd.biffh.XLRDError:
             m = '### Fatal error: Worksheet "settings" must exist in "%s" to define form_id and form_title' % self.short_file
-            return [m]
-        finally:
-            return []
+            return m
+        else:
+            return None
 
-    # Return (XML root, country_round, version)
+    # Return (questionnaire_code, XML root, country_round, version)
     def process_naming(self, name):
         found = re.match(naming_schemes.odk_file_re, name)
         if not found:
@@ -115,10 +115,11 @@ class FileChecker():
             raise NameError(m)
         else:
             re_groups = found.groups()
-            xml_root = naming_schemes.xml_codes[naming_schemes.questionnaire_codes[re_groups[1]]]
+            questionnaire_code = naming_schemes.questionnaire_codes[re_groups[1]]
+            xml_root = naming_schemes.xml_codes[questionnaire_code]
             name_split = name.split('-')
             country_round, version = name_split[0], name_split[-2]
-            return (xml_root, country_round, version)
+            return (questionnaire_code, xml_root, country_round, version)
 
 def xlsform_convert(file_checkers):
     successes = []
@@ -186,7 +187,7 @@ if __name__ == '__main__':
 
     if not args.overwrite:
         all_messages = [checker.get_overwrite_conflicts() for checker in file_checkers]
-        messages = [m for sublist in all_messages for m in sublist]
+        messages = [w for sublist in all_messages for w in sublist]
         if messages:
             print "### Fatal error: Pre-existing files prevent operation when overwrite not enabled:"
             for m in messages:
@@ -194,7 +195,7 @@ if __name__ == '__main__':
             sys.exit()
 
     all_warnings = [checker.check_xlsform_settings() for checker in file_checkers]
-    warnings = [w for sublist in all_warnings for w in sublist]
+    warnings = filter(None, all_warnings)
     if warnings:
         for w in warnings:
             print w
