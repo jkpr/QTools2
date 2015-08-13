@@ -393,7 +393,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=prog_desc)
     file_help = 'One or more paths to files destined for editing. Filenames must conform to PMA2020 naming standards.'
     parser.add_argument('xmlfile', nargs='+', help=file_help)
-    suffix_help = 'A suffix for the output file. A hyphen and a suffix will be appended to the end of the base file name, e.g. "hhq.xml" -> "hhq-[suffix].xml". Default is "edited". Cannot be empty string.'
+    suffix_help = 'A suffix for the output file. A hyphen and a suffix will be appended to the end of the base file name, e.g. "hhq.xml" -> "hhq-[suffix].xml". Default is "e" for edited. Cannot be empty string.'
     parser.add_argument('--suffix', help=suffix_help)
     overwrite_help = 'Include this flag for output files to overwrite pre-existing files.'
     parser.add_argument('--overwrite', action='store_true', help=overwrite_help)

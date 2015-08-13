@@ -206,4 +206,4 @@ if __name__ == '__main__':
     if len(successes) == len(file_checkers):
         # All were successfully converted
         xml_results = [item.xml_copy for item in file_checkers]
-        qxmledit.edit_all(xml_results, args.overwrite)
+        qxmledit.edit_all(xml_results, args.overwrite, suffix='e')
