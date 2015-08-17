@@ -11,6 +11,7 @@ import re
 
 from pyxform.xls2xform import xls2xform_convert
 from pyxform.errors import PyXFormError
+from pyxform.odk_validate import ODKValidateError
 import xlrd
 
 import naming_schemes
@@ -165,7 +166,11 @@ def xlsform_convert(file_checkers):
         except PyXFormError as e:
             m = '### PyXForm ERROR converting "%s" to XML! ###' % orig
             print m
-            print e
+            print e.message
+        except ODKValidateError as e:
+            # Remove output file if there is an error
+            os.remove(out_xml)
+            print e.message
         else:
             successes.append(checker)
             os.rename(out_xml, last_xml)

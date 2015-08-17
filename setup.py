@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(
-    name='QTools2',
+    name='qtools2',
     version='0.1.1',
     author='James K. Pringle',
     author_email='jpringle@jhu.edu',
