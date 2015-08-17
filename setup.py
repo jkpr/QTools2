@@ -14,9 +14,9 @@ setup(
     description='Useful tools for working with PMA2020 Questionnaires',
     long_description=open('README.txt').read(),
     install_requires=[
-        'pyxform>=0.9.22'
+        'pyxform>=1.9.22'
     ],
     dependency_links=[
-        'https://github.com/jkpr/pyxform/tarball/master#egg=pyxform-0.9.22'
+        'https://github.com/jkpr/pyxform/tarball/master#egg=pyxform-1.9.22'
     ]
 )
