@@ -170,6 +170,8 @@ def xlsform_convert(file_checkers):
         except ODKValidateError as e:
             # Remove output file if there is an error
             os.remove(out_xml)
+            m = '### ODKValidate ERROR checking "%s"! ###' % out_xml
+            print m
             print e.message
         else:
             successes.append(checker)
