@@ -7,6 +7,7 @@ import os.path
 import argparse
 import sys
 import collections
+import itertools
 
 import qxml
 import naming_schemes
@@ -177,9 +178,32 @@ class Xform():
         self.data = [line.replace("&amp;#x", "&#x") for line in self.data]
 
 
+def insert_instance_name_meta(this_xform):
+    instance_name = '<instanceName/>'
+    instance_name_found = this_xform.find_trimmed(instance_name) >= 0
+    if not instance_name_found:
+        this_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
+    elif naming_schemes.insert_instance_name[this_xform.xml_root]:
+        m = "### ERROR: %s xform has <instanceName/> predefined."
+        m %= this_xform.xml_root
+        raise XformError(m)
+    return instance_name_found
+
+
 def process_hq_fq(hq_xform, fq_xform):
-    hq_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
-    
+    # Check that hq and fq locations are the same.
+    for hq_loc, fq_loc in itertools.izip_longest(hq_xform.locations,
+                                                 fq_xform.locations):
+        if hq_loc is None or fq_loc is None:
+            m = "### ERROR: FQ and HQ xforms do not have same defined locations"
+            raise XformError(m)
+        if hq_loc not in fq_loc:
+            m = "### ERROR: FQ location (%s) not the same as HQ location (%s)"
+            m %= (fq_loc, hq_loc)
+            raise XformError(m)
+
+    hq_instance_name_found = insert_instance_name_meta(hq_xform)
+
     for node in ['firstname', 'age']:
         hq_xform.delete_binding(node)
 
@@ -198,13 +222,14 @@ def process_hq_fq(hq_xform, fq_xform):
     frs_form_id = fq_xform.get_form_id()
     hhq_frs_form_name = get_hhq_frs_form_name(hq_xform.rel_locations, frs_form_id)
     hq_xform.insert_full_tag([hhq_frs_form_name], '<!-- FRS_form_name -->', above=False)
-    hhq_instance_name = get_hhq_instance_name(hq_xform.rel_locations)
-    hq_xform.insert_full_tag([hhq_instance_name], '<!-- instanceName -->', above=False)
+    if not hq_instance_name_found:
+        hhq_instance_name = get_hhq_instance_name(hq_xform.rel_locations)
+        hq_xform.insert_full_tag([hhq_instance_name], '<!-- instanceName -->', above=False)
     loc_transfers = get_hq_location_transfer(hq_xform.locations)
     hq_xform.insert_full_tag(loc_transfers, '<!-- location data to push to FRS -->', above=False)
 
     ###### Now process FQ #######
-    fq_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)    
+    fq_instance_name_found = insert_instance_name_meta(fq_xform)
 
     fq_extras = ['<deleteTest/>', '<HHQ-GPS/>']
     fq_xform.insert_full_tag(fq_extras, '</meta>', above=False)
@@ -215,8 +240,9 @@ def process_hq_fq(hq_xform, fq_xform):
 
     fq_fixed_bindings = insert_after.bind_frs.splitlines()
     fq_xform.insert_above_bind(fq_fixed_bindings)
-    frs_instance_name = get_frs_instance_name(hq_xform.rel_locations)
-    fq_xform.insert_full_tag([frs_instance_name], '<!-- instanceName -->', above=False)
+    if not fq_instance_name_found:
+        frs_instance_name = get_frs_instance_name(hq_xform.rel_locations)
+        fq_xform.insert_full_tag([frs_instance_name], '<!-- instanceName -->', above=False)
 
 
 def get_hq_location_transfer(locations):
@@ -226,22 +252,24 @@ def get_hq_location_transfer(locations):
 
 
 def process_sdp(sdp_xform):
-    sdp_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
+    sdp_instance_name_found = insert_instance_name_meta(sdp_xform)
     sdp_fixed_bindings = insert_after.bind_instance_name.splitlines()
     sdp_xform.insert_above_bind(sdp_fixed_bindings)
     most_location = sdp_xform.rel_locations[0]
-    sdp_instance_name = get_sdp_instance_name(most_location)
-    sdp_xform.insert_full_tag([sdp_instance_name], '<!-- instanceName -->', above=False)
+    if not sdp_instance_name_found:
+        sdp_instance_name = get_sdp_instance_name(most_location)
+        sdp_xform.insert_full_tag([sdp_instance_name], '<!-- instanceName -->', above=False)
     sdp_xform.newline_fix()
 
 
 def process_listing(listing_xform):
-    listing_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
+    listing_instance_name_found = insert_instance_name_meta(listing_xform)
     listing_fixed_bindings = insert_after.bind_instance_name.splitlines()
     listing_xform.insert_above_bind(listing_fixed_bindings)
     most_location = listing_xform.rel_locations[0]
-    listing_instance_name = get_listing_instance_name(most_location)
-    listing_xform.insert_full_tag([listing_instance_name], '<!-- instanceName -->', above=False)
+    if not listing_instance_name_found:
+        listing_instance_name = get_listing_instance_name(most_location)
+        listing_xform.insert_full_tag([listing_instance_name], '<!-- instanceName -->', above=False)
     listing_xform.newline_fix()
 
 
@@ -250,12 +278,13 @@ def process_selection(selection_xform):
 
 
 def process_rq(rq_xform):
-    rq_xform.insert_full_tag(['<instanceName/>'], '</meta>', above=True)
+    rq_instance_name_found = insert_instance_name_meta(rq_xform)
     rq_fixed_bindings = insert_after.bind_instance_name.splitlines()
     rq_xform.insert_above_bind(rq_fixed_bindings)
     rel_locations = rq_xform.rel_locations
-    rq_instance_name = get_rq_instance_name(rel_locations)
-    rq_xform.insert_full_tag([rq_instance_name], '<!-- instanceName -->', above=False)
+    if not rq_instance_name_found:
+        rq_instance_name = get_rq_instance_name(rel_locations)
+        rq_xform.insert_full_tag([rq_instance_name], '<!-- instanceName -->', above=False)
     rq_xform.newline_fix()
 
 
@@ -327,6 +356,11 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
         sys.exit()
 
     if not overwrite and file_conflicts:
+        print "=== XML EDITING ==="
+        if suffix == '':
+            m = ("### Fatal error: Trying to edit XML in place without "
+                 "overwrite permission")
+            print m
         m = ("### Fatal error: Pre-existing files prevent operation when "
              "overwrite not enabled:")
         print m
@@ -339,6 +373,7 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
         if len(set([item.country_round for item in xform_list])) != 1:
             m = ('### Fatal error: Forms should all be from same country '
                  'and round.')
+            print "=== XML EDITING ==="
             print m
             sys.exit()
 
@@ -349,6 +384,7 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
         if most_count > 1:
             m = ('### Fatal error: There can be at most one of each kind '
                  'of questionnaire')
+            print "=== XML EDITING ==="
             print m
             sys.exit()
 
@@ -368,6 +404,7 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
         pass
 
     if hhq_exists ^ frs_exists:
+        print "=== XML EDITING ==="
         m = '### Fatal error: HQ and FQ must be edited together or not at all.'
         print m
         sys.exit()
@@ -382,6 +419,7 @@ def get_xform_by_type(xforms, xform_type):
         my_xform = xforms.pop(ind)
         return my_xform
     except ValueError:
+        print "=== XML EDITING ==="
         print "Xform of type '%s' not found" % xform_type
 
 
@@ -408,6 +446,7 @@ def edit_all(xmlfiles, overwrite, suffix):
         elif cur_xform.xml_root == 'RQ':
             process_rq(cur_xform)
         else:
+            print "=== XML EDITING ==="
             m = '### Error: unrecognized questionnaire type: "%s"'
             m = m % cur_xform.xml_root
             print m
@@ -446,4 +485,4 @@ if __name__ == '__main__':
     try:
         edit_all(args.xmlfile, args.overwrite, args.suffix)
     except XformError as e:
-        print e
+        print e.message

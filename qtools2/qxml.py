@@ -184,7 +184,7 @@ def xlsform_convert(file_checkers):
 # TODO add subprocess call to bash to convert the quotation marks
 if __name__ == '__main__':
     prog_desc = ('Convert PMA2020 files from source XLSForm to XML and '
-                 'validate (v2).')
+                 'validate.')
     parser = argparse.ArgumentParser(description=prog_desc)
     file_help = 'One or more paths to files destined for conversion.'
     parser.add_argument('xlsxfile', nargs='+', help=file_help)
