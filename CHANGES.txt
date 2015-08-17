@@ -1,1 +1,6 @@
-v1, 12 June 2015 -- Initial release.
+v0.1.1, 17 August 2015
+ * Edited XML no longer needs to have a suffix. Default is no suffix (edit 
+   in place).
+ * Supports <instanceName/> definitions from XLSForm.
+
+v0.1.0, 12 June 2015 -- Initial release. 
