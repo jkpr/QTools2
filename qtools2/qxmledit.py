@@ -67,10 +67,10 @@ class Xform():
         try:
             start_ind = trimmed.index(start)
             finish_ind = trimmed.index(finish)
-            if not 0 < finish_ind - start_ind <= 10:
+            if not 0 < finish_ind - start_ind <= 20:
                 raise ValueError
         except ValueError:
-            m = ('%s Error: Expected to find %s and then %s less than 10 '
+            m = ('%s Error: Expected to find %s and then %s less than 20 '
                  'lines later')
             m %= (self.short_file, start, finish)
             raise XformError(m)
@@ -473,8 +473,8 @@ if __name__ == '__main__':
                    'xml files are edited in place.')
     parser.add_argument('--suffix', help=suffix_help)
     overwrite_help = ('Include this flag for output files to overwrite '
-                      'pre-existing files. Flag must be present if not suffix '
-                      'is given.')
+                      'pre-existing files. Flag must be present if suffix '
+                      'is not given.')
     parser.add_argument('--overwrite', action='store_true', help=overwrite_help)
 
     args = parser.parse_args()
