@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # qxml.py IMPROVED!
 # Python 2
@@ -20,226 +21,318 @@ import qxmledit
 
 class FileChecker():
 
-    def __init__(self, path, perform_checks=True, check_xls=True):
-        if perform_checks:
-            if not os.path.isfile(path):
-                m = '### Fatal error: "%s" is not a file' % path
-                raise IOError(m)
+    def __init__(self, path, suffix='', regular=False, do_checks=True):
+        self.path = path
+        self.suffix = suffix
 
-        dir, short_file = os.path.split(path)
-        self.path = os.path.join(dir, short_file)
-        self.short_file = short_file
+        self.base_dir, self.short_file = os.path.split(path)
+        self.name, self.ext = os.path.splitext(self.short_file)
 
-        name, ext = os.path.splitext(short_file)
-        if perform_checks and check_xls:
-            if ext != '.xlsx' and ext != '.xls':
-                m = '### Fatal error: "%s" does not end with ".xlsx" or ".xls"'
-                m = m % short_file
-                raise TypeError(m)
+        if do_checks:
+            self.basic_file_checks()
 
-        self.questionnaire_code, self.xml_root, self.country_round, \
-            self.version = self.process_naming(name)
-
-        self.xls_copy = os.path.join(dir, self.xml_root + ext)
-        self.xml_result = os.path.join(dir, self.xml_root + '.xml')
-        self.xml_copy = os.path.join(dir, name + '.xml')
+        # --- PMA-specific information
+        self.questionnaire_code = ''
+        self.xml_root = ''
+        self.country_round = ''
+        self.version = ''
+        if not regular:
+            self.process_naming(do_checks)
 
         self.form_id = ''
         self.form_title = ''
+        if not regular and do_checks:
+            self.pma_file_checks()
+        # --- End PMA-specific information
+
+        # File I/O information
+        if regular:
+            self.xls_source = self.path
+        else:
+            xls_copy = self.xml_root + self.ext
+            self.xls_source = os.path.join(self.base_dir, xls_copy)
+        file_suffix = suffix + '.xml'
+        self.final_xml = os.path.join(self.base_dir, self.name + file_suffix)
+        if regular:
+            self.xml_result = self.final_xml
+        else:
+            xml_result = self.xml_root + '.xml'
+            self.xml_result = os.path.join(self.base_dir, xml_result)
+
+
+    def basic_file_checks(self):
+        if not os.path.isfile(self.path):
+            m = '### Fatal error: "%s" is not a file' % self.path
+            raise IOError(m)
+
+        if self.ext != '.xlsx' and self.ext != '.xls':
+            m = '### Fatal error: "%s" does not end with ".xlsx" or ".xls"'
+            m %= self.short_file
+            raise TypeError(m)
 
     def get_overwrite_conflicts(self):
-        results = [file for file in [self.xls_copy, self.xml_result,
-                                     self.xml_copy] if os.path.isfile(file)]
-        return results
+        potential_conflicts = [self.xls_source, self.xml_result, self.final_xml]
+        results = [f for f in potential_conflicts if os.path.isfile(f)]
+        return set(results)
+
+    def pma_file_checks(self):
+        self.check_xlsform_settings()
+
+    # TODO: combine check_form_id and check_form_title intelligently
+    def check_form_id(self, settings):
+        first_row = [cell.value for cell in settings.row(0)]
+        form_id = 'form_id'
+        if form_id in first_row:
+            ind = first_row.index(form_id)
+            form_id_col = [cell.value for cell in settings.col(ind)]
+            form_id_col.remove(form_id)
+            filtered = filter(None, form_id_col)
+            if filtered:
+                my_id = filtered[0]
+                proposed_id = '-'.join([self.questionnaire_code,
+                                        self.country_round.lower(),
+                                        self.version])
+                if my_id != proposed_id:
+                    m = ('### Fatal error: form_id "%s" does not match ODK'
+                         ' filename "%s"')
+                    m %= (my_id, self.short_file)
+                    raise NameError(m)
+                else:
+                    self.form_id = my_id
+            else:
+                m = ('### Fatal error: "form_id" column found but not '
+                     'defined in [%s]"settings" !')
+                m %= self.short_file
+                raise NameError(m)
+        else:
+            m = ('### Fatal error: no "form_id" column found in '
+                 '[%s]"settings" !')
+            m %= self.short_file
+            raise NameError(m)
+
+    # TODO: combine check_form_id and check_form_title intelligently
+    def check_form_title(self, settings):
+        first_row = [cell.value for cell in settings.row(0)]
+        form_title = 'form_title'
+        if form_title in first_row:
+            ind = first_row.index(form_title)
+            form_title_col = [cell.value for cell in settings.col(ind)]
+            form_title_col.remove(form_title)
+            filtered = filter(None, form_title_col)
+            if filtered:
+                my_title = filtered[0]
+                if self.short_file.find(my_title) != 0:
+                    m = ('### Fatal error: form_title "%s" does not match '
+                         'ODK filename "%s"')
+                    m %= (my_title, self.short_file)
+                    raise NameError(m)
+                else:
+                    self.form_title = my_title
+            else:
+                m = ('### Fatal error: "form_title" column found but not '
+                    'defined in [%s]"settings" !')
+                m %= self.short_file
+                raise NameError(m)
+        else:
+            m = ('### Fatal error: "form_title" column not found in '
+                 '[%s]"settings" !')
+            m %= self.short_file
+            raise NameError(m)
 
     # check form_id and form_title against file_name
     def check_xlsform_settings(self):
         try:
             wb = xlrd.open_workbook(self.path)
             settings = wb.sheet_by_name('settings')
-            first_row = [cell.value for cell in settings.row(0)]
-            form_id = 'form_id'
-            my_id = None
-            if form_id in first_row:
-                ind = first_row.index(form_id)
-                form_id_col = [cell.value for cell in settings.col(ind)]
-                form_id_col.remove(form_id)
-                filtered = filter(None, form_id_col)
-                if filtered:
-                    my_id = filtered[0]
-                    proposed_id = '-'.join([self.questionnaire_code,
-                                            self.country_round.lower(),
-                                            self.version])
-                    if my_id != proposed_id:
-                        m = ('### Fatal error: form_id "%s" does not match ODK'
-                             ' filename "%s"')
-                        m = m % (my_id, self.short_file)
-                        raise NameError(m)
-                    else:
-                        self.form_id = my_id
-                else:
-                    m = ('### Fatal error: "form_id" column found but not '
-                         'defined in [%s]"settings" !')
-                    m = m % self.short_file
-                    raise NameError(m)
-            else:
-                m = ('### Fatal error: no "form_id" column found in '
-                     '[%s]"settings" !')
-                m = m % self.short_file
-                raise NameError(m)
-
-            form_title = 'form_title'
-            my_title = None
-            if form_title in first_row:
-                ind = first_row.index(form_title)
-                form_title_col = [cell.value for cell in settings.col(ind)]
-                form_title_col.remove(form_title)
-                filtered = filter(None, form_title_col)
-                if filtered:
-                    my_title = filtered[0]
-                    if self.short_file.find(my_title) != 0:
-                        m = ('### Fatal error: form_title "%s" does not match '
-                             'ODK filename "%s"')
-                        m = m % (my_title, self.short_file)
-                        raise NameError(m)
-                    else:
-                        self.form_title = my_title
-                else:
-                    m = ('### Fatal error: "form_title" column found but not '
-                        'defined in [%s]"settings" !')
-                    m = m % self.short_file
-                    raise NameError(m)
-            else:
-                m = ('### Fatal error: "form_title" column not found in '
-                     '[%s]"settings" !')
-                m = m % self.short_file
-                raise NameError(m)
-        except NameError as e:
-            return e.message
+            self.check_form_id(settings)
+            self.check_form_title(settings)
         except xlrd.biffh.XLRDError:
             m = ('### Fatal error: Worksheet "settings" must exist in "%s" to '
                  'define form_id and form_title')
-            m = m % self.short_file
-            return m
-        else:
-            return None
+            m %= self.short_file
+            raise NameError(m)
 
-    # Return (questionnaire_code, XML root, country_round, version)
-    @staticmethod
-    def process_naming(name):
-        found = re.match(naming_schemes.odk_file_re, name)
-        if not found:
-            m = ('### Fatal error: "%s" does not match approved (as of May '
-                 '2015) PMA naming scheme:')
-            m = m % name
+    def process_naming(self, do_checks):
+        found = re.match(naming_schemes.odk_file_re, self.name)
+        if not found and do_checks:
+            m = ('### Fatal error: "%s" does not match approved (as of '
+                 'May 2015) PMA naming scheme:')
+            m %= self.name
             m += '\n###  $ ' + naming_schemes.odk_file_model
             raise NameError(m)
-        else:
+        elif found:
             re_groups = found.groups()
-            questionnaire_code = naming_schemes.questionnaire_codes[re_groups[1]]
-            xml_root = naming_schemes.xml_codes[questionnaire_code]
-            name_split = name.split('-')
-            country_round, version = name_split[0], name_split[-2]
-            return questionnaire_code, xml_root, country_round, version
+            self.questionnaire_code = naming_schemes.questionnaire_codes[
+                    re_groups[1]]
+            self.xml_root = naming_schemes.xml_codes[self.questionnaire_code]
+            name_split = self.name.split('-')
+            self.country_round, self.version = name_split[0], name_split[-2]
 
 
-def xlsform_convert(file_checkers):
-    successes = []
-    for checker in file_checkers:
-        orig = checker.path
-        copy = checker.xls_copy
-        out_xml = checker.xml_result
-        last_xml = checker.xml_copy
-    
-        if orig != copy:
-            shutil.copyfile(orig, copy)
-        try:
-            warnings = xls2xform_convert(copy, out_xml)
-            if warnings:
-                m = '### PyXForm warnings converting "%s" to XML! ###' % orig
-                n = '\n' + '#' * len(m) + '\n' + m + '\n' + '#' * len(m)
-                print n
-                for w in warnings:
-                    o = '\n'.join(filter(None, w.splitlines()))
-                    print o
-                print '  End PyXForm  '.center(len(m), '#') + '\n'
-        except PyXFormError as e:
-            m = '### PyXForm ERROR converting "%s" to XML! ###' % orig
-            print m
-            print e.message
-        except ODKValidateError as e:
-            m = '### Invalid ODK Xform: "%s"! ###' % last_xml
-            print m
-            print e.message
-            print '### Deleting "%s"' % last_xml
-            # Remove output file if there is an error
-            os.remove(out_xml)
-        else:
-            successes.append(checker)
-            os.rename(out_xml, last_xml)
-        finally:
-            if orig != copy:
-                os.remove(copy)
+def xlsform_offline(source, dest, orig='', final=''):
+    if orig == '':
+        orig = source
+    if final == '':
+        final = dest
+    try:
+        orig_short = os.path.split(orig)[1]
+        final_short = os.path.split(final)[1]
 
-    if successes:
-        m = '=== XML CREATION SUCCESSES ==='
+        warnings = xls2xform_convert(source, dest)
+        if warnings:
+            m = '### PyXForm warnings converting "%s" to XML! ###' % orig_short
+            n = '\n' + '#' * len(m) + '\n' + m + '\n' + '#' * len(m)
+            print n
+            for w in warnings:
+                o = '\n'.join(filter(None, w.splitlines()))
+                print o
+            print '  End PyXForm  '.center(len(m), '#') + '\n'
+    except PyXFormError as e:
+        m = '### PyXForm ERROR converting "%s" to XML! ###' % orig_short
         print m
-        for s in successes:
-            print s.xml_copy
-    
-    return successes
+        print e.message
+        return False
+    except ODKValidateError as e:
+        m = '### Invalid ODK Xform: "%s"! ###' % final_short
+        print m
+        print e.message
+        print '### Deleting "%s"' % final_short
+        # Remove output file if there is an error with ODKValidate
+        os.remove(dest)
+        return False
+    except Exception as e:
+        print e.message
+        print '### Deleting "%s"' % final_short
+        # Remove output file if there is an error with ODKValidate
+        os.remove(dest)
+        return False
+    else:
+        return True
 
-# TODO add subprocess call to bash to convert the quotation marks
-if __name__ == '__main__':
-    prog_desc = ('Convert PMA2020 files from source XLSForm to XML and '
-                 'validate.')
-    parser = argparse.ArgumentParser(description=prog_desc)
-    file_help = 'One or more paths to files destined for conversion.'
-    parser.add_argument('xlsxfile', nargs='+', help=file_help)
-    overwrite_help = ('Include this flag for output files to overwrite '
-                      'pre-existing files.')
-    parser.add_argument('--overwrite', action='store_true', help=overwrite_help)
 
-    args = parser.parse_args()
-
-    file_checkers = []
-    fatal_messages = []
-
-    for file in args.xlsxfile:
-        try:
-            checker = FileChecker(file)
-            file_checkers.append(checker)
-        except (IOError, TypeError, NameError) as e:
-            fatal_messages.append(e.message)
-
-    if fatal_messages:
-        for m in fatal_messages:
+def exit_if_error(file_errors, overwrite_errors):
+    if file_errors or overwrite_errors:
+        for m in file_errors:
             print m
-        sys.exit()
-
-    if not args.overwrite:
-        all_messages = [checker.get_overwrite_conflicts() for checker in
-                        file_checkers]
-        messages = [w for sublist in all_messages for w in sublist]
-        if messages:
+        if overwrite_errors:
             m = ('### Fatal error: Pre-existing files prevent operation when'
                  ' overwrite not enabled:')
             print m
-            for m in messages:
+            for m in overwrite_errors:
                 print m
-            sys.exit()
-
-    all_warnings = [checker.check_xlsform_settings() for checker in
-                    file_checkers]
-    warnings = filter(None, all_warnings)
-    if warnings:
-        for w in warnings:
-            print w
         sys.exit()
 
-    successes = xlsform_convert(file_checkers)
 
-    if len(successes) == len(file_checkers):
-        # All were successfully converted
-        xml_results = [item.xml_copy for item in file_checkers]
-        qxmledit.edit_all(xml_results, args.overwrite, suffix='')
+def remove_files(file_list):
+    for f in file_list:
+        os.remove(f)
+
+
+def remove_partial_win(file_checkers, wins):
+    m = '### Removing all XML files because not all conversions were successful'
+    print m
+    rm = [c.xml_result for c, w in zip(file_checkers, wins) if w]
+    remove_files(rm)
+
+
+def report_xml_conversion(file_checkers, wins):
+    n_wins = wins.count(True)
+    record = '(' + str(n_wins) + '/' + str(len(wins)) + ')'
+    msg = ' XML CREATION SUCCESSES ' + record + ' '
+    m = msg.center(50, '=')
+    print m
+    for checker, win in zip(file_checkers, wins):
+        if win:
+            print ' -- ' + checker.final_xml
+    return n_wins == len(wins)
+
+
+def convert_for_pma(file_checkers):
+    wins = []
+    for f in file_checkers:
+        orig = f.path
+        copy = f.xls_source
+        out_xml = f.xml_result
+        last_xml = f.final_xml
+
+        if os.path.isfile(copy):
+            os.remove(copy)
+        shutil.copyfile(orig, copy)
+        win = xlsform_offline(copy, out_xml, orig, last_xml)
+        wins.append(win)
+        os.remove(copy)
+    return wins
+
+
+def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
+    unique_list = set(file_list)
+
+    file_checkers = []
+    file_errors = []
+    overwrite_errors = []
+    for this_file in unique_list:
+        try:
+            fc = FileChecker(this_file, suffix, regular, do_checks=True)
+            file_checkers.append(fc)
+            if preexisting:
+                oc = fc.get_overwrite_conflicts()
+                overwrite_errors.extend(oc)
+        except (IOError, TypeError, NameError) as e:
+            file_errors.append(e.message)
+    exit_if_error(file_errors, overwrite_errors)
+
+    # Convert all files correctly
+    if regular:
+        wins = [xlsform_offline(f.path, f.final_xml) for f in file_checkers]
+    else:
+        wins = convert_for_pma(file_checkers)
+
+    all_wins = report_xml_conversion(file_checkers, wins)
+
+    if not regular and not all_wins:
+        remove_partial_win(file_checkers, wins)
+    elif not regular:
+        qxmledit.edit_all_checkers(file_checkers)
+
+
+
+
+
+
+
+# TODO add subprocess call to bash to convert the quotation marks
+if __name__ == '__main__':
+    prog_desc = ('Convert files from XLSForm to XForm and validate. '
+                 'This versatile program can accept .xls or .xlsx files as '
+                 'input. The output is a pretty-formatted XML file. An '
+                 'attempt is made to use the ODKValidate JAR file to analyze '
+                 'the result--Java is required for success. The program '
+                 'default is to enforce PMA2020 conventions for file naming '
+                 'and linking. However, this can be turned off to convert any '
+                 'XLSForm to XForm for use in ODK.')
+    parser = argparse.ArgumentParser(description=prog_desc)
+
+    file_help = 'One or more paths to files destined for conversion.'
+    parser.add_argument('xlsxfile', nargs='+', help=file_help)
+
+    overwrite_help = ('Include this flag to prevent overwriting '
+                      'pre-existing files.')
+    parser.add_argument('-p', '--preexisting', action='store_true',
+                        help=overwrite_help)
+
+    reg_help = ('This flag indicates the program should convert to XForm and '
+                'not try to make PMA2020-specific edits')
+    parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
+
+    suffix_help = ('A suffix to add to the base file name. Cannot start with a '
+                   'hyphen ("-").')
+    parser.add_argument('-s', '--suffix', help=suffix_help)
+
+    args = parser.parse_args()
+
+    if args.suffix is None:
+        args.suffix = ''
+    suffix = ''
+    if args.suffix is not None:
+        suffix = args.suffix
+    xlsform_convert(args.xlsxfile, args.suffix, args.preexisting, args.regular)

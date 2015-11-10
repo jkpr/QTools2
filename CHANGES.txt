@@ -1,3 +1,9 @@
+v0.1.2, 10 November 2015
+ * Rewrote the command line usage so that the default is to edit without a
+   suffix and to overwrite pre-existing files.
+ * Changed max search location depth to 20 lines.
+ * Changed internal mechanics to be friendlier with Windows.
+
 v0.1.1, 17 August 2015
  * Edited XML no longer needs to have a suffix. Default is no suffix (edit 
    in place).

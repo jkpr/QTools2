@@ -20,10 +20,16 @@ class XformError(Exception):
 
 class Xform():
 
-    def __init__(self, filename):
-        self.filename = filename
-        
-        filechecker = qxml.FileChecker(filename, True, False)
+    def __init__(self, filename=None, file_checker=None):
+        if filename is None:
+            self.filename = file_checker.xml_result
+        else:
+            self.filename = filename
+
+        if file_checker is None:
+            filechecker = qxml.FileChecker(filename, True, False)
+        else:
+            filechecker = file_checker
         self.xml_root = filechecker.xml_root
         self.short_file = filechecker.short_file
         self.country_round = filechecker.country_round
@@ -33,6 +39,8 @@ class Xform():
         self.rel_locations = ()
 
         self.write_location = ''
+        if file_checker is not None:
+            self.write_location = file_checker.final_xml
 
         with open(self.filename) as f:
             self.data = list(f)
@@ -40,11 +48,15 @@ class Xform():
             self.rel_locations = self.get_rel_locations()
 
     def write(self, suffix, outfile=None):
-        if outfile is None:
-            outfile = self.get_outfile(suffix)
-        with open(outfile, 'w') as f:
-            f.writelines(self.data)
-            self.write_location = outfile
+        if self.write_location != '':
+            with open(self.write_location, 'w') as f:
+                f.writelines(self.data)
+        else:
+            if outfile is None:
+                outfile = self.get_outfile(suffix)
+            with open(outfile, 'w') as f:
+                f.writelines(self.data)
+                self.write_location = outfile
 
     def get_outfile(self, suffix):
         outfile = self.filename
@@ -336,6 +348,33 @@ def get_hhq_instance_name(rel_locations):
     return hhq_instance_name
 
 
+def xml_file_checks(xform_list):
+    # Country and round needs to match
+    if xform_list:
+        if len(set([item.country_round for item in xform_list])) != 1:
+            m = ('### Fatal error: Forms should all be from same country '
+                 'and round.')
+            raise XformError(m)
+
+    # At most one of each kind
+    if xform_list:
+        counter = collections.Counter([x.xml_root for x in xform_list])
+        most_common, most_count = counter.most_common(1)[0]
+        if most_count > 1:
+            m = ('### Fatal error: There can be at most one of each kind '
+                 'of questionnaire')
+            raise XformError(m)
+
+    # Check if HHQ then FRS and if FRS then HHQ
+    xml_types = [item.xml_root for item in xform_list]
+    hhq_exists = 'HHQ' in xml_types
+    frs_exists = 'FRS' in xml_types
+
+    if hhq_exists ^ frs_exists:
+        m = '### Fatal error: HQ and FQ must be edited together or not at all.'
+        raise XformError(m)
+
+
 def get_all_xforms(xmlfiles, overwrite, suffix):
     file_conflicts = []
     errors = []
@@ -356,7 +395,6 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
         sys.exit()
 
     if not overwrite and file_conflicts:
-        print "=== XML EDITING ==="
         if suffix == '':
             m = ("### Fatal error: Trying to edit XML in place without "
                  "overwrite permission")
@@ -368,47 +406,7 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
             print m
         sys.exit()
 
-    # Country and round needs to match
-    if xform_list:
-        if len(set([item.country_round for item in xform_list])) != 1:
-            m = ('### Fatal error: Forms should all be from same country '
-                 'and round.')
-            print "=== XML EDITING ==="
-            print m
-            sys.exit()
-
-    # At most one of each kind
-    if xform_list:
-        counter = collections.Counter([x.xml_root for x in xform_list])
-        most_common, most_count = counter.most_common(1)[0]
-        if most_count > 1:
-            m = ('### Fatal error: There can be at most one of each kind '
-                 'of questionnaire')
-            print "=== XML EDITING ==="
-            print m
-            sys.exit()
-
-    # Check if HHQ then FRS and if FRS then HHQ
-    xml_types = [item.xml_root for item in xform_list]
-    hhq_exists = False
-    frs_exists = False
-    try:
-        xml_types.index('HHQ')
-        hhq_exists = True
-    except ValueError:
-        pass
-    try:
-        xml_types.index('FRS')
-        frs_exists = True
-    except ValueError:
-        pass
-
-    if hhq_exists ^ frs_exists:
-        print "=== XML EDITING ==="
-        m = '### Fatal error: HQ and FQ must be edited together or not at all.'
-        print m
-        sys.exit()
-
+    xml_file_checks(xform_list)
     return xform_list
 
 
@@ -419,14 +417,24 @@ def get_xform_by_type(xforms, xform_type):
         my_xform = xforms.pop(ind)
         return my_xform
     except ValueError:
-        print "=== XML EDITING ==="
-        print "Xform of type '%s' not found" % xform_type
+        m = "=== XML EDITING ==="
+        m += "Xform of type '%s' not found" % xform_type
+        raise XformError(m)
 
 
-def edit_all(xmlfiles, overwrite, suffix):
-    xforms = get_all_xforms(xmlfiles, overwrite, suffix)
+def report_xml_editing(converted, n_xforms):
+    n_wins = len(converted)
+    record = '(' + str(n_wins) + '/' + str(n_xforms) + ')'
+    msg = ' XML EDITING SUCCESSES ' + record + ' '
+    m = msg.center(50, '=')
+    print m
+    for item in converted:
+        print ' -- ' + item.write_location
+
+
+def edit_all_xforms(xforms, suffix=''):
+    n_xforms = len(xforms)
     converted = []
-
     while xforms:
         cur_xform = xforms.pop()
         if cur_xform.xml_root == 'HHQ':
@@ -451,15 +459,30 @@ def edit_all(xmlfiles, overwrite, suffix):
             m = m % cur_xform.xml_root
             print m
         converted.append(cur_xform)
-
     for xform in converted:
         xform.write(suffix)
+    report_xml_editing(converted, n_xforms)
 
-    if converted:
-        m = '=== XML EDITING SUCCESSES ==='
+
+def edit_all(xmlfiles, overwrite, suffix):
+    xforms = get_all_xforms(xmlfiles, overwrite, suffix)
+    edit_all_xforms(xforms)
+
+
+def edit_all_checkers(file_checkers):
+    try:
+        xforms = [Xform(file_checker=f) for f in file_checkers]
+        xml_file_checks(xforms)
+        edit_all_xforms(xforms)
+    except XformError as e:
+        msg = ' XML EDITING '
+        m = msg.center(50, '=')
         print m
-    for item in converted:
-        print item.write_location
+        print e.message
+    finally:
+        for item in file_checkers:
+            os.remove(item.xml_result)
+
 
 if __name__ == '__main__':
     prog_desc = 'Edit PMA2020 XML files to prepare for ODK Collect.'
