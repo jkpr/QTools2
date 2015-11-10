@@ -41,7 +41,7 @@ location_brackets = {
 
 insert_instance_name = {
     "HHQ": True,
-    "FRS": True,
+    "FRS": False,
     "SDP": False,
     "listing": False,
     "Selection": False,
