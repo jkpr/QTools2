@@ -17,7 +17,7 @@ def start_gui():
         qxml.xlsform_convert(filenames)
     except (TypeError, NameError):
         print 'No files picked.'
-    input('Press enter to end the program.')
+    raw_input('Press enter to end the program.')
 
 
 if __name__ == '__main__':
