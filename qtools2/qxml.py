@@ -1,8 +1,49 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-# qxml.py IMPROVED!
-# Python 2
+# The MIT License (MIT)
+#
+# Copyright (c) 2015 PMA2020
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Convert XLSForm to ODK XForm.
+
+This module provides the functionality to convert from XLSForm to XForm. It
+also can apply PMA2020-specific constraints. It performs Basic validity checks,
+PMA-specific validity checks if necessary, and can append a suffix to the file
+name. A command line interface is available when using this module as __main__.
+
+Examples:
+    When the ``qtools2`` package is installed in python's library, typical
+    usage on the command line might be::
+
+        $ python -m qtools2.qxml NER1*-v1-*.xlsx
+        $ python -m qtools2.qxml file1.xlsx [file2.xlsx ...]
+
+    The default options are to overwrite old files, and to make PMA-specific
+    edits. For help::
+
+        $ python -m qtools2.qxml -h
+
+Last modified: 11 November 2015
+"""
 
 import argparse
 import sys
@@ -20,7 +61,13 @@ import qxmledit
 
 
 class FileChecker():
+    """Check files and generate resulting path information
 
+    Stores path information of input files and determines what intermediate
+    and final paths for output should be. Performs checks that if failed, halt
+    processing and raise an exception. Checks for conflicts with pre-existing
+    files.
+    """
     def __init__(self, path, suffix='', regular=False, do_checks=True):
         self.path = path
         self.suffix = suffix
@@ -31,7 +78,7 @@ class FileChecker():
         if do_checks:
             self.basic_file_checks()
 
-        # --- PMA-specific information
+        # --- BEGIN PMA-specific information
         self.questionnaire_code = ''
         self.xml_root = ''
         self.country_round = ''
@@ -43,7 +90,7 @@ class FileChecker():
         self.form_title = ''
         if not regular and do_checks:
             self.pma_file_checks()
-        # --- End PMA-specific information
+        # --- END PMA-specific information
 
         # File I/O information
         if regular:
@@ -58,7 +105,6 @@ class FileChecker():
         else:
             xml_result = self.xml_root + '.xml'
             self.xml_result = os.path.join(self.base_dir, xml_result)
-
 
     def basic_file_checks(self):
         if not os.path.isfile(self.path):
@@ -170,6 +216,14 @@ class FileChecker():
 
 
 def xlsform_offline(source, dest, orig='', final=''):
+    """Convert xlsx to xml using ``pyxform``
+
+    :param source: Path to file used as source
+    :param dest: Path for output of pyxform
+    :param orig: Name mask for source
+    :param final: Name mask for dest
+    :return: Returns True iff conversion was successful
+    """
     if orig == '':
         orig = source
     if final == '':
@@ -295,12 +349,6 @@ def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
         qxmledit.edit_all_checkers(file_checkers)
 
 
-
-
-
-
-
-# TODO add subprocess call to bash to convert the quotation marks
 if __name__ == '__main__':
     prog_desc = ('Convert files from XLSForm to XForm and validate. '
                  'This versatile program can accept .xls or .xlsx files as '
@@ -332,7 +380,4 @@ if __name__ == '__main__':
 
     if args.suffix is None:
         args.suffix = ''
-    suffix = ''
-    if args.suffix is not None:
-        suffix = args.suffix
     xlsform_convert(args.xlsxfile, args.suffix, args.preexisting, args.regular)

@@ -1,4 +1,5 @@
 v0.1.2, 10 November 2015
+ * Added partial GUI functionality
  * Rewrote the command line usage so that the default is to edit without a
    suffix and to overwrite pre-existing files.
  * Changed max search location depth to 20 lines.
