@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 
 # The MIT License (MIT)
 #
@@ -28,7 +29,7 @@ Dr. Luke H. MacDonald's instructions for manual XML editing were translated to
 python. This facilitated faster development with minimal errors; the only true
 errors were undiscovered bugs in this code.
 
-Originally, this module was built as to stand alone. However, in practice, it
+Originally, this module was built to stand alone. However, in practice, it
 is never run without ``qxml``. Thus, for historical reasons, there is a
 command line interface.
 
@@ -100,10 +101,11 @@ class Xform():
 
     def get_rel_locations(self):
         try:
-            ea_ind = self.locations.index('EA')
+            locs_search = [loc.strip().upper() for loc in self.locations]
+            ea_ind = locs_search.index('EA')
             rel_locations = self.locations[ea_ind:]
         except ValueError:
-            rel_locations = self.locations[-3:]
+            rel_locations = self.locations[-4:]
         return rel_locations
 
     def get_locations(self):
