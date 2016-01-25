@@ -33,7 +33,7 @@ Originally, this module was built to stand alone. However, in practice, it
 is never run without ``qxml``. Thus, for historical reasons, there is a
 command line interface.
 
-Last modified: 11 November 2015
+Last modified: 25 January 2016
 """
 
 import re
@@ -224,6 +224,15 @@ class Xform():
     def newline_fix(self):
         self.data = [line.replace("&amp;#x", "&#x") for line in self.data]
 
+    def remove_fluff_strings(self):
+        self.data = [self.remove_fluff_from_line(line) for line in self.data]
+
+    @staticmethod
+    def remove_fluff_from_line(line):
+        for s in naming_schemes.str_to_delete:
+            line = line.replace(s, "")
+        return line
+
 
 def insert_instance_name_meta(this_xform):
     instance_name = '<instanceName/>'
@@ -263,6 +272,7 @@ def process_hq_fq(hq_xform, fq_xform):
     hq_xform.insert_full_tag(transfer_tags, '</member_bckgrnd>', above=False)
 
     hq_xform.newline_fix()
+    hq_xform.remove_fluff_strings()
 
     hq_fixed_bindings = insert_after.bind_hhq.splitlines()
     hq_xform.insert_above_bind(hq_fixed_bindings)
@@ -282,6 +292,7 @@ def process_hq_fq(hq_xform, fq_xform):
     fq_xform.insert_full_tag(fq_extras, '</meta>', above=False)
 
     fq_xform.newline_fix()
+    fq_xform.remove_fluff_strings()
 
     fq_xform.delete_binding('san_facility')
 
@@ -307,6 +318,7 @@ def process_sdp(sdp_xform):
         sdp_instance_name = get_sdp_instance_name(most_location)
         sdp_xform.insert_full_tag([sdp_instance_name], '<!-- instanceName -->', above=False)
     sdp_xform.newline_fix()
+    sdp_xform.remove_fluff_strings()
 
 
 def process_listing(listing_xform):
@@ -318,10 +330,12 @@ def process_listing(listing_xform):
         listing_instance_name = get_listing_instance_name(most_location)
         listing_xform.insert_full_tag([listing_instance_name], '<!-- instanceName -->', above=False)
     listing_xform.newline_fix()
+    listing_xform.remove_fluff_strings()
 
 
 def process_selection(selection_xform):
     selection_xform.newline_fix()
+    selection_xform.remove_fluff_strings()
 
 
 def process_rq(rq_xform):
@@ -333,6 +347,7 @@ def process_rq(rq_xform):
         rq_instance_name = get_rq_instance_name(rel_locations)
         rq_xform.insert_full_tag([rq_instance_name], '<!-- instanceName -->', above=False)
     rq_xform.newline_fix()
+    rq_xform.remove_fluff_strings()
 
 
 def get_rq_instance_name(rel_locations):

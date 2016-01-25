@@ -28,7 +28,7 @@ Naming conventions and abbreviations, enforced in Python2
 
 These recent changes were correctly implemented on 1 June 2015.
 
-Last edited: 17 November 2015
+Last edited: 25 January 2016
 """
 
 country_codes = {
@@ -40,7 +40,8 @@ country_codes = {
     "Kenya": "KE",
     "Niger": "NE",
     "Nigeria": "NG",
-    "Uganda": "UG"
+    "Uganda": "UG",
+    "Rajasthan": "RJ"
 }
 
 
@@ -111,3 +112,9 @@ odk_file_model = form_title_model + "-[SIG]"
 form_title_re = "(" + "|".join(country_codes.values()) + ")R\\d-(" + "|".join(questionnaire_codes.keys()) +")-v\\d{1,2}"
 form_id_re = "(" + "|".join(questionnaire_codes.values()) + ")-(" + "|".join([code.lower() for code in country_codes.values()]) + ")r\\d-v\\d{1,2}"
 odk_file_re = form_title_re + "-[a-zA-Z]{2,}"
+
+"""
+A list of strings to delete from the questionnaires. These are just place
+holders.
+"""
+str_to_delete = ("#####",)
