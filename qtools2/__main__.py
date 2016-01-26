@@ -24,5 +24,14 @@
 # SOFTWARE.
 
 import qgui
+import argparse
 
-qgui.start_gui()
+prog_desc = 'Open a system dialog to pick files for XML conversion and edits.'
+parser = argparse.ArgumentParser(description=prog_desc)
+
+alive_help = ('Include this flag to keep the program alive after conversion. '
+              'This is helpful for running in Windows.')
+parser.add_argument('-a', '--alive', action='store_true', help=alive_help)
+args = parser.parse_args()
+
+qgui.start_gui(args.alive)

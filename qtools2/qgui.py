@@ -41,7 +41,7 @@ from Tkinter import Tk
 from tkFileDialog import askopenfilenames
 
 
-def start_gui():
+def start_gui(keep_alive=False):
 
     print 'Please select source MS-Excel files for conversion.'
     Tk().withdraw()
@@ -54,7 +54,8 @@ def start_gui():
         qxml.xlsform_convert(filenames)
     except (TypeError, NameError):
         print 'No files picked.'
-    raw_input('Press enter to end the program.')
+    if keep_alive:
+        raw_input('Press enter to end the program.')
 
 
 if __name__ == '__main__':
