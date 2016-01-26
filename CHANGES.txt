@@ -1,3 +1,7 @@
+v0.1.3, 26 January 2016
+ * Changed default GUI functionality to close after work is done.
+ * Now remove target strings from XML, e.g. '#####'
+
 v0.1.2, 10 November 2015
  * Added partial GUI functionality
  * Rewrote the command line usage so that the default is to edit without a

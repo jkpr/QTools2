@@ -17,6 +17,8 @@ implemented thusly::
 
     python -m qtools2
 
+and keep the program alive by adding the '-a' flag (useful for Windows).
+
 ************
 Installation
 ************
