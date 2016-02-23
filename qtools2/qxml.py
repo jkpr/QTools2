@@ -318,6 +318,19 @@ def convert_for_pma(file_checkers):
     return wins
 
 
+def check_version_consistency(file_checkers):
+    versions = {checker.version for checker in file_checkers
+                if checker.version != ''}
+    if len(versions) > 1:
+        m = ('### Fatal error: Found %d different file version numbers. '
+             'Should be 1.')
+        m %= len(versions)
+        v_string = ', '.join(versions)
+        print m
+        print ' -- ' + v_string
+        sys.exit()
+
+
 def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
     unique_list = set(file_list)
 
@@ -334,6 +347,9 @@ def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
         except (IOError, TypeError, NameError) as e:
             file_errors.append(e.message)
     exit_if_error(file_errors, overwrite_errors)
+
+    if not regular:
+        check_version_consistency(file_checkers)
 
     # Convert all files correctly
     if regular:

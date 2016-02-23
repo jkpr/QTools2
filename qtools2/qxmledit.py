@@ -531,7 +531,8 @@ def edit_all_checkers(file_checkers):
         print e.message
     finally:
         for item in file_checkers:
-            os.remove(item.xml_result)
+            if os.path.isfile(item.xml_result):
+                os.remove(item.xml_result)
 
 
 if __name__ == '__main__':
