@@ -33,7 +33,7 @@ Originally, this module was built to stand alone. However, in practice, it
 is never run without ``qxml``. Thus, for historical reasons, there is a
 command line interface.
 
-Last modified: 25 January 2016
+Last modified: 2 March 2016
 """
 
 import re
@@ -71,6 +71,7 @@ class Xform():
         self.data = []
         self.locations = ()
         self.rel_locations = ()
+        self.has_logging = False
 
         self.write_location = ''
         if file_checker is not None:
@@ -80,6 +81,13 @@ class Xform():
             self.data = list(f)
             self.locations = self.get_locations()
             self.rel_locations = self.get_rel_locations()
+
+        self.has_logging = self.get_logging()
+
+    def get_logging(self):
+        logging_tag = '<logging/>'
+        has_logging = self.find_trimmed(logging_tag) >= 0
+        return has_logging
 
     def write(self, suffix, outfile=None):
         if self.write_location != '':
@@ -246,6 +254,14 @@ def insert_instance_name_meta(this_xform):
     return instance_name_found
 
 
+def get_hq_new_bindings(fq_xform):
+    if fq_xform.find_trimmed('<FQA>') >= 0:
+        s = insert_after.bind_hhq_1+insert_after.new_age+insert_after.bind_hhq_2
+    else:
+        s = insert_after.bind_hhq_1+insert_after.old_age+insert_after.bind_hhq_2
+    return s
+
+
 def process_hq_fq(hq_xform, fq_xform):
     # Check that hq and fq locations are the same.
     for hq_loc, fq_loc in itertools.izip_longest(hq_xform.locations,
@@ -274,7 +290,10 @@ def process_hq_fq(hq_xform, fq_xform):
     hq_xform.newline_fix()
     hq_xform.remove_fluff_strings()
 
-    hq_fixed_bindings = insert_after.bind_hhq.splitlines()
+
+    hq_new_bindings = get_hq_new_bindings(fq_xform)
+
+    hq_fixed_bindings = hq_new_bindings.splitlines()
     hq_xform.insert_above_bind(hq_fixed_bindings)
     frs_form_id = fq_xform.get_form_id()
     hhq_frs_form_name = get_hhq_frs_form_name(hq_xform.rel_locations, frs_form_id)
@@ -334,6 +353,13 @@ def process_listing(listing_xform):
 
 
 def process_selection(selection_xform):
+    selection_instance_name_found = insert_instance_name_meta(selection_xform)
+    selection_fixed_bindings = insert_after.bind_instance_name.splitlines()
+    selection_xform.insert_above_bind(selection_fixed_bindings)
+    if not selection_instance_name_found:
+        most_location = selection_xform.rel_locations[0]
+        selection_instance_name = get_selection_instance_name(most_location)
+        selection_xform.insert_full_tag([selection_instance_name], '<!-- instanceName -->', above=False)
     selection_xform.newline_fix()
     selection_xform.remove_fluff_strings()
 
@@ -356,6 +382,11 @@ def get_rq_instance_name(rel_locations):
     rq_form_name = """<bind calculate="concat('RQ',':',%s)" nodeset="/RQ/meta/instanceName" type="string"/>"""
     rq_form_name %= concat_xpaths
     return rq_form_name
+
+def get_selection_instance_name(most_location):
+    selection_instance_name = """<bind calculate="concat('Selection:',string(/Selection/%s))" nodeset="/Selection/meta/instanceName" type="string"/>"""
+    selection_instance_name %= most_location
+    return selection_instance_name
 
 
 def get_listing_instance_name(most_location):
@@ -424,6 +455,29 @@ def xml_file_checks(xform_list):
         m = '### Fatal error: HQ and FQ must be edited together or not at all.'
         raise XformError(m)
 
+    report_logging(xform_list)
+
+
+def report_logging(xform_list):
+    has = [xform for xform in xform_list if xform.has_logging]
+    has_not = [xform for xform in xform_list if not xform.has_logging]
+    if has:
+        m = ' FORMS WITH LOGGING (%d/%d) '
+        m %= (len(has), len(xform_list))
+        msg = m.center(50, '=')
+        print ''
+        print msg
+        for xform in has:
+            print ' -- %s' % xform.write_location
+    if has_not:
+        m = ' FORMS W/O LOGGING (%d/%d) '
+        m %= (len(has_not), len(xform_list))
+        msg = m.center(50, '=')
+        print ''
+        print msg
+        for xform in has_not:
+            print ' -- %s' % xform.write_location
+
 
 def get_all_xforms(xmlfiles, overwrite, suffix):
     file_conflicts = []
@@ -477,6 +531,7 @@ def report_xml_editing(converted, n_xforms):
     record = '(' + str(n_wins) + '/' + str(n_xforms) + ')'
     msg = ' XML EDITING SUCCESSES ' + record + ' '
     m = msg.center(50, '=')
+    print ''
     print m
     for item in converted:
         print ' -- ' + item.write_location

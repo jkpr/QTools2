@@ -1,4 +1,4 @@
-bind_hhq = """<!-- ......................................... --> 
+bind_hhq_1 = """<!-- ......................................... -->
 <!--    added to XML after XLSFORM output      -->
 <!-- ......................................... --> 
 
@@ -6,8 +6,15 @@ bind_hhq = """<!-- ......................................... -->
 
 <!-- instanceName -->
 
-<!-- age -->
-<bind constraint="(. &lt; 130 )" jr:constraintMsg="HQ3: Must be less than 130." nodeset="/HHQ/HH_member/member_bckgrnd/age" saveInstance="/FRS/age" relevant=" /HHQ/consent_obtained " required="true()" type="int"/>
+"""
+
+old_age = """<!-- age -->
+<bind constraint="(. &lt; 130 )" jr:constraintMsg="HQ3: Must be less than 130." nodeset="/HHQ/HH_member/member_bckgrnd/age" saveInstance="/FRS/age" relevant=" /HHQ/consent_obtained " required="true()" type="int"/>"""
+
+new_age = """<!-- age -->
+<bind constraint="(. &lt; 130 )" jr:constraintMsg="HQ3: Must be less than 130." nodeset="/HHQ/HH_member/member_bckgrnd/age" saveInstance="/FRS/FQA/age" relevant=" /HHQ/consent_obtained " required="true()" type="int"/>"""
+
+bind_hhq_2 = """
 
 <!-- firstname -->
 <bind nodeset="/HHQ/HH_member/member_bckgrnd/firstname" saveInstance="/FRS/firstname" relevant=" /HHQ/consent_obtained " required="true()" type="string"/>
