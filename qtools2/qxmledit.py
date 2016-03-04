@@ -255,10 +255,14 @@ def insert_instance_name_meta(this_xform):
 
 
 def get_hq_new_bindings(fq_xform):
+    s = insert_after.bind_hhq_1
     if fq_xform.find_trimmed('<FQA>') >= 0:
-        s = insert_after.bind_hhq_1+insert_after.new_age+insert_after.bind_hhq_2
+        s += insert_after.new_age
     else:
-        s = insert_after.bind_hhq_1+insert_after.old_age+insert_after.bind_hhq_2
+        s +=    insert_after.old_age
+    if fq_xform.find_trimmed('<region_name/>') >= 0:
+        s += insert_after.ethiopia_region
+    s += insert_after.bind_hhq_2
     return s
 
 
@@ -284,6 +288,8 @@ def process_hq_fq(hq_xform, fq_xform):
     transfer_tags_plain = ['FRS_form_name']
     transfer_tags_plain += hhq_locations_transfer
     transfer_tags_plain += ['photo_transfer', 'GPS_transfer', 'enumerator_transfer', 'san_facility_transfer']
+    if fq_xform.find_trimmed('<region_name/>') >= 0:
+        transfer_tags_plain += ['regionname_transfer']
     transfer_tags = ['<' + tag + '/>' for tag in transfer_tags_plain]
     hq_xform.insert_full_tag(transfer_tags, '</member_bckgrnd>', above=False)
 
@@ -314,6 +320,8 @@ def process_hq_fq(hq_xform, fq_xform):
     fq_xform.remove_fluff_strings()
 
     fq_xform.delete_binding('san_facility')
+    if fq_xform.find_trimmed('<region_name/>') >= 0:
+        fq_xform.delete_binding('region_name')
 
     fq_fixed_bindings = insert_after.bind_frs.splitlines()
     fq_xform.insert_above_bind(fq_fixed_bindings)

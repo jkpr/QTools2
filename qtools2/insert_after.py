@@ -4,15 +4,22 @@ bind_hhq_1 = """<!-- ......................................... -->
 
 <!-- FRS_form_name -->
 
-<!-- instanceName -->
+<!-- instanceName -->"""
 
-"""
+old_age = """
 
-old_age = """<!-- age -->
+<!-- age -->
 <bind constraint="(. &lt; 130 )" jr:constraintMsg="HQ3: Must be less than 130." nodeset="/HHQ/HH_member/member_bckgrnd/age" saveInstance="/FRS/age" relevant=" /HHQ/consent_obtained " required="true()" type="int"/>"""
 
-new_age = """<!-- age -->
+new_age = """
+
+<!-- age -->
 <bind constraint="(. &lt; 130 )" jr:constraintMsg="HQ3: Must be less than 130." nodeset="/HHQ/HH_member/member_bckgrnd/age" saveInstance="/FRS/FQA/age" relevant=" /HHQ/consent_obtained " required="true()" type="int"/>"""
+
+ethiopia_region = """
+
+<!-- Region Name Transfer -->
+<bind nodeset="/HHQ/HH_member/regionname_transfer" calculate="if(string-length( /HHQ/region )!= 0,jr:choice-name( /HHQ/region ,' /HHQ/region '),'(unspecified region)')" saveInstance="/FRS/region_name" relevant=" /HHQ/consent_obtained " required="true()" type="string"/>"""
 
 bind_hhq_2 = """
 
