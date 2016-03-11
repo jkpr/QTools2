@@ -38,7 +38,7 @@ The steps to install are
 [1]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [2]: https://www.python.org/downloads/
 
-Note: the author uses [Homebrew][3] for Python installation.
+Note: the author uses [Homebrew][3] for Python installation on Mac.
 
 [3]: http://brew.sh/
 
