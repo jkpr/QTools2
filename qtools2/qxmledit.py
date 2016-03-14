@@ -259,9 +259,18 @@ def get_hq_new_bindings(fq_xform):
     if fq_xform.find_trimmed('<FQA>') >= 0:
         s += insert_after.new_age
     else:
-        s +=    insert_after.old_age
+        s += insert_after.old_age
     if fq_xform.find_trimmed('<region_name/>') >= 0:
         s += insert_after.ethiopia_region
+    s += insert_after.bind_hhq_2
+    return s
+
+def get_fq_new_bindings(fq_xform):
+    s = insert_after.bind_frs_1
+    if fq_xform.find_trimmed('<FQA>') >= 0:
+        s += insert_after.fq_new_age
+    else:
+        s += insert_after.fq_old_age
     s += insert_after.bind_hhq_2
     return s
 
@@ -323,10 +332,12 @@ def process_hq_fq(hq_xform, fq_xform):
     if fq_xform.find_trimmed('<region_name/>') >= 0:
         fq_xform.delete_binding('region_name')
 
-    fq_fixed_bindings = insert_after.bind_frs.splitlines()
+    fq_new_bindings = get_fq_new_bindings(fq_xform)
+
+    fq_fixed_bindings = fq_new_bindings.splitlines()
     fq_xform.insert_above_bind(fq_fixed_bindings)
     if not fq_instance_name_found:
-        frs_instance_name = get_frs_instance_name(hq_xform.rel_locations)
+        frs_instance_name = get_frs_instance_name(hq_xform.rel_locations, fq_xform)
         fq_xform.insert_full_tag([frs_instance_name], '<!-- instanceName -->', above=False)
 
 
@@ -409,14 +420,25 @@ def get_sdp_instance_name(most_location):
     return sdp_instance_name
 
 
-def get_frs_instance_name(rel_locations):
+def get_frs_instance_name(rel_locations, fq_xform):
     xpaths_unlinked = ['string(/FRS/geographic_info_unlinked/' + loc + '_unlinked)' for loc in rel_locations]
     concat_xpaths_unlinked = ",'-',".join(xpaths_unlinked)
 
     xpaths_linked = ['string(/FRS/location_information/' + loc + ')' for loc in rel_locations]
     concat_xpaths_linked = ",'-',".join(xpaths_linked)
 
-    frs_instance_name = """<bind calculate="if(/FRS/unlinked, concat('FR:',%s,'-',/FRS/firstname,'-',/FRS/age), concat('FR:',%s,'-',/FRS/firstname,'-',/FRS/age))" nodeset="/FRS/meta/instanceName" type="string"/>"""
+    frs_instance_name_1 = """<bind calculate="if(/FRS/unlinked, concat('FR:',%s,'-',/FRS/firstname,'-',/FRS/age), concat('FR:',%s,'-',/FRS/firstname,'-',"""
+    frs_old_age = """/FRS/age"""
+    frs_new_age = """/FRS/FQA/age"""
+    frs_instance_name_2 = """))" nodeset="/FRS/meta/instanceName" type="string"/>"""
+
+    frs_instance_name = frs_instance_name_1
+    if fq_xform.find_trimmed('<FQA>') >= 0:
+        frs_instance_name += frs_new_age
+    else:
+        frs_instance_name += frs_old_age
+    frs_instance_name += frs_instance_name_2
+
     frs_instance_name %= (concat_xpaths_unlinked, concat_xpaths_linked)
     return frs_instance_name
 
