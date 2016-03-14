@@ -48,11 +48,9 @@ bind_frs_1 = """<!-- ......................................... -->
 <!-- deleteForm -->"""
 
 fq_old_age = """
-
 <bind nodeset="/FRS/deleteTest" relevant="(/FRS/age &lt; 15) or (/FRS/age &gt; 49)" deleteForm="true()"/>"""
 
 fq_new_age = """
-
 <bind nodeset="/FRS/deleteTest" relevant="(/FRS/FQA/age &lt; 15) or (/FRS/FQA/age &gt; 49)" deleteForm="true()"/>"""
 
 

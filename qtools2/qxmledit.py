@@ -427,19 +427,13 @@ def get_frs_instance_name(rel_locations, fq_xform):
     xpaths_linked = ['string(/FRS/location_information/' + loc + ')' for loc in rel_locations]
     concat_xpaths_linked = ",'-',".join(xpaths_linked)
 
-    frs_instance_name_1 = """<bind calculate="if(/FRS/unlinked, concat('FR:',%s,'-',/FRS/firstname,'-',/FRS/age), concat('FR:',%s,'-',/FRS/firstname,'-',"""
+    frs_instance_name = """<bind calculate="if(/FRS/unlinked, concat('FR:',%s,'-',/FRS/firstname,'-',%s), concat('FR:',%s,'-',/FRS/firstname,'-',%s))" nodeset="/FRS/meta/instanceName" type="string"/>"""
     frs_old_age = """/FRS/age"""
     frs_new_age = """/FRS/FQA/age"""
-    frs_instance_name_2 = """))" nodeset="/FRS/meta/instanceName" type="string"/>"""
-
-    frs_instance_name = frs_instance_name_1
     if fq_xform.find_trimmed('<FQA>') >= 0:
-        frs_instance_name += frs_new_age
+        frs_instance_name %= (concat_xpaths_unlinked, frs_new_age, concat_xpaths_unlinked, frs_new_age)
     else:
-        frs_instance_name += frs_old_age
-    frs_instance_name += frs_instance_name_2
-
-    frs_instance_name %= (concat_xpaths_unlinked, concat_xpaths_linked)
+        frs_instance_name %= (concat_xpaths_unlinked, frs_old_age, concat_xpaths_unlinked, frs_old_age)
     return frs_instance_name
 
 
