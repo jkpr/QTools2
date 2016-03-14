@@ -431,9 +431,9 @@ def get_frs_instance_name(rel_locations, fq_xform):
     frs_old_age = """/FRS/age"""
     frs_new_age = """/FRS/FQA/age"""
     if fq_xform.find_trimmed('<FQA>') >= 0:
-        frs_instance_name %= (concat_xpaths_unlinked, frs_new_age, concat_xpaths_unlinked, frs_new_age)
+        frs_instance_name %= (concat_xpaths_unlinked, frs_new_age, concat_xpaths_linked, frs_new_age)
     else:
-        frs_instance_name %= (concat_xpaths_unlinked, frs_old_age, concat_xpaths_unlinked, frs_old_age)
+        frs_instance_name %= (concat_xpaths_unlinked, frs_old_age, concat_xpaths_linked, frs_old_age)
     return frs_instance_name
 
 
