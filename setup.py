@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='qtools2',
-    version='0.1.4',
+    version='0.1.5',
     author='James K. Pringle',
     author_email='jpringle@jhu.edu',
     url='http://www.pma2020.org',
