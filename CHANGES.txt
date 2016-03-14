@@ -1,3 +1,6 @@
+v0.1.5, 14 March 2016
+ * Caught a bug in the new FQ age XML editing. Fixed it.
+
 v0.1.4, 3 March 2016
  * Added an alert to the presence of a meta logging tag.
  * Added support for new FQ age (related to removing string calculates).
