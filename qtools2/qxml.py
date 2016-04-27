@@ -44,7 +44,6 @@ Examples:
 
 Last modified: 11 November 2015
 """
-
 import argparse
 import sys
 import shutil

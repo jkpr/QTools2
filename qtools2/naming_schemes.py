@@ -109,8 +109,8 @@ form_title_model = "[CC]R[#]-[((Household|Female|SDP|Reinterview)-Questionnaire)
 form_id_model = "[HQ|FQ|SQ|RQ|listing|sel]-[cc]r[#]-v[##]"
 odk_file_model = form_title_model + "-[SIG]"
 
-form_title_re = "(" + "|".join(country_codes.values()) + ")R\\d-(" + "|".join(questionnaire_codes.keys()) +")-v\\d{1,2}"
-form_id_re = "(" + "|".join(questionnaire_codes.values()) + ")-(" + "|".join([code.lower() for code in country_codes.values()]) + ")r\\d-v\\d{1,2}"
+form_title_re = "(" + "|".join(country_codes.values()) + ")R\\d{1,2}-(" + "|".join(questionnaire_codes.keys()) +")-v\\d{1,2}"
+form_id_re = "(" + "|".join(questionnaire_codes.values()) + ")-(" + "|".join([code.lower() for code in country_codes.values()]) + ")r\\d{1,2}-v\\d{1,2}"
 odk_file_re = form_title_re + "-[a-zA-Z]{2,}"
 
 """
