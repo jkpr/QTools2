@@ -58,8 +58,6 @@ from cli import command_line_interface
 from xlsform import Xlsform
 from errors import XlsformError
 from errors import ConvertError
-import constants
-
 
 
 def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False):
@@ -213,7 +211,6 @@ def hq_fq_mismatch(filename):
            u'at all.')
     msg %= filename
     raise XlsformError(msg)
-
 
 
 if __name__ == '__main__':
