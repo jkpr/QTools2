@@ -1,8 +1,10 @@
 from distutils.core import setup
 
+from qtools2 import __version__
+
 setup(
     name='qtools2',
-    version='0.1.5',
+    version=__version__,
     author='James K. Pringle',
     author_email='jpringle@jhu.edu',
     url='https://github.com/jkpr/QTools2',

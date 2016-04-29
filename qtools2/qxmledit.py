@@ -45,6 +45,7 @@ import itertools
 import qxml
 import naming_schemes
 import insert_after
+from __init__ import __version__ as VERSION
 
 
 class XformError(Exception):
@@ -89,7 +90,8 @@ class Xform():
         return has_logging
 
     def write(self, suffix, outfile=None):
-
+        version_stamp = '<!-- qtools2 v%s -->\n' % VERSION
+        self.data.insert(1, version_stamp)
         if self.write_location != '':
             with open(self.write_location, 'w') as f:
                 f.writelines(self.data)
