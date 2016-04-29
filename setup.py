@@ -14,7 +14,7 @@ setup(
     ],
     license='LICENSE.txt',
     description='Useful tools for working with PMA2020 Questionnaires',
-    long_description=open('README.txt').read(),
+    long_description=open('README.rst').read(),
     install_requires=[
         'pmaxform>=1.0.1',
         'pyxform>=0.9.22'
