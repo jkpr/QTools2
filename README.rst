@@ -9,7 +9,7 @@ The code is necessarily written for Python 2 because it depends on PyXForm to
 convert MS-Excel documents into XML. We just have to live with this annoyance. 
 
 The two main modules are meant to be used as command line utilities. However, 
-in practice, `qxmledit` is rarely used by itself. To learn the usage, type::
+in practice, ``qxmledit`` is rarely used by itself. To learn the usage, type::
 
     python -m qtools2.qxml --help
     python -m qtools2.qxmledit --help
@@ -66,4 +66,4 @@ Suggestions and Gotchas
 Bugs
 ----
 
-Submit bug reports to James Pringle at jpringle@jhu.edu.
+Submit bug reports to James Pringle at `jpringle@jhu.edu`.
