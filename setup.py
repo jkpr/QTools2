@@ -1,11 +1,13 @@
 from distutils.core import setup
 
+from qtools2 import __version__
+
 setup(
     name='qtools2',
-    version='0.1.5',
+    version=__version__,
     author='James K. Pringle',
     author_email='jpringle@jhu.edu',
-    url='http://www.pma2020.org',
+    url='https://github.com/jkpr/QTools2',
     packages=[
         'qtools2', 
         'qtools2.test'
@@ -14,6 +16,10 @@ setup(
     description='Useful tools for working with PMA2020 Questionnaires',
     long_description=open('README.txt').read(),
     install_requires=[
+        'pmaxform>=1.0.1',
         'pyxform>=0.9.22'
     ],
+    dependency_links=[
+        'https://github.com/jkpr/pmaxform/zipball/master#egg=pmaxform-1.0.1'
+    ]
 )

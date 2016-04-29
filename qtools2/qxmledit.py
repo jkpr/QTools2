@@ -33,19 +33,19 @@ Originally, this module was built to stand alone. However, in practice, it
 is never run without ``qxml``. Thus, for historical reasons, there is a
 command line interface.
 
-Last modified: 2 March 2016
+Last modified: 29 April 2016
 """
 
 import re
 import os.path
 import argparse
-import sys
 import collections
 import itertools
 
 import qxml
 import naming_schemes
 import insert_after
+from __init__ import __version__ as VERSION
 
 
 class XformError(Exception):
@@ -90,6 +90,8 @@ class Xform():
         return has_logging
 
     def write(self, suffix, outfile=None):
+        version_stamp = '<!-- qtools2 v%s -->\n' % VERSION
+        self.data.insert(1, version_stamp)
         if self.write_location != '':
             with open(self.write_location, 'w') as f:
                 f.writelines(self.data)
@@ -520,7 +522,7 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
     if errors:
         for m in errors:
             print m
-        sys.exit()
+        raise qxml.QxmlException()
 
     if not overwrite and file_conflicts:
         if suffix == '':
@@ -532,7 +534,7 @@ def get_all_xforms(xmlfiles, overwrite, suffix):
         print m
         for m in file_conflicts:
             print m
-        sys.exit()
+        raise qxml.QxmlException()
 
     xml_file_checks(xform_list)
     return xform_list

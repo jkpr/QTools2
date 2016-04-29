@@ -42,11 +42,9 @@ Examples:
 
         $ python -m qtools2.qxml -h
 
-Last modified: 11 November 2015
+Last modified: 29 April 2016
 """
-
 import argparse
-import sys
 import shutil
 import os
 import re
@@ -105,6 +103,37 @@ class FileChecker():
         else:
             xml_result = self.xml_root + '.xml'
             self.xml_result = os.path.join(self.base_dir, xml_result)
+
+        # Checks for 2.0 upgrades
+        self.warn_new_version()
+
+    def warn_new_version(self):
+        found = []
+        try:
+            wb = xlrd.open_workbook(self.path)
+            settings = wb.sheet_by_name('settings')
+            settings_headers = [cell.value for cell in settings.row(0)]
+            if 'xml_root' in settings_headers:
+                found.append('found "xml_root" in settings header')
+        except xlrd.biffh.XLRDError:
+            pass
+        try:
+            wb = xlrd.open_workbook(self.path)
+            survey = wb.sheet_by_name('survey')
+            survey_headers = [cell.value for cell in survey.row(0)]
+            new_things = ['save_instance', 'save_form', 'delete_form']
+            for thing in new_things:
+                if thing in survey_headers:
+                    found.append('found "%s" in survey header' % thing)
+        except xlrd.biffh.XLRDError:
+            pass
+        if found:
+            sentence_end = ', '.join(found)
+            sentence_end += '.'
+            msg = '~~~ In "%s" ' + sentence_end
+            msg %= self.path
+            print msg
+            print '~~~ Do you mean to use Qtools2 v2.0? Use qtools2.convert.'
 
     def basic_file_checks(self):
         if not os.path.isfile(self.path):
@@ -215,6 +244,9 @@ class FileChecker():
             self.country_round, self.version = name_split[0], name_split[-2]
 
 
+class QxmlException(Exception):
+    pass
+
 def xlsform_offline(source, dest, orig='', final=''):
     """Convert xlsx to xml using ``pyxform``
 
@@ -274,7 +306,7 @@ def exit_if_error(file_errors, overwrite_errors):
             print m
             for m in overwrite_errors:
                 print m
-        sys.exit()
+        raise QxmlException()
 
 
 def remove_files(file_list):
@@ -328,7 +360,7 @@ def check_version_consistency(file_checkers):
         v_string = ', '.join(versions)
         print m
         print ' -- ' + v_string
-        sys.exit()
+        raise QxmlException()
 
 
 def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
@@ -349,7 +381,8 @@ def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
     exit_if_error(file_errors, overwrite_errors)
 
     if not regular:
-        check_version_consistency(file_checkers)
+        # check_version_consistency(file_checkers)
+        pass
 
     # Convert all files correctly
     if regular:
@@ -396,4 +429,8 @@ if __name__ == '__main__':
 
     if args.suffix is None:
         args.suffix = ''
-    xlsform_convert(args.xlsxfile, args.suffix, args.preexisting, args.regular)
+    try:
+        xlsform_convert(args.xlsxfile, args.suffix, args.preexisting,
+                        args.regular)
+    except QxmlException:
+        pass
