@@ -1,3 +1,12 @@
+v0.2.0, 29 April 2016
+ * New release with many updates.
+ * Support for `pmaxform`. This brings xml_root, save_instance, save_form, and
+   delete_form with it.
+ * Removed sys.exit() calls. Replaced with raising an exception.
+ * Allow multiple versions at once.
+ * Added python scripts to capture all basic usage in `scripts` folder.
+ * Managing version in __init__.py file instead of setup.py.
+
 v0.1.5, 14 March 2016
  * Caught a bug in the new FQ age XML editing. Fixed it.
 
