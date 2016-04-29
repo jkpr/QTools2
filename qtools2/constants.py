@@ -41,3 +41,4 @@ odk_file_model = naming_schemes.odk_file_model
 odk_file_re = naming_schemes.odk_file_re
 
 q_codes = naming_schemes.questionnaire_codes
+xml_codes = naming_schemes.xml_codes

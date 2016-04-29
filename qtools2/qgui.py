@@ -31,18 +31,19 @@ knobs and whistles for setting options and choosing files.
 Currently, the code prints to console and the only graphical part is the
 file picker.
 
-Last edited: 11 November 2015
+Last edited: 29 April 2016
 """
 
 import os
+
 import qxml
+import convert
 
 from Tkinter import Tk
 from tkFileDialog import askopenfilenames
 
 
-def start_gui(keep_alive=False):
-
+def start_gui(keep_alive=False, regular=False, new_version=False):
     print 'Please select source MS-Excel files for conversion.'
     Tk().withdraw()
     filenames = askopenfilenames(initialdir=os.getcwd())
@@ -51,7 +52,11 @@ def start_gui(keep_alive=False):
             m = 'Expected a tuple as returned value from dialog, got %s'
             m %= type(filenames)
             raise TypeError(m)
-        qxml.xlsform_convert(filenames)
+        if new_version:
+            filenames = [unicode(f) for f in filenames]
+            convert.xlsform_convert(filenames, regular=regular)
+        else:
+            qxml.xlsform_convert(filenames, regular=regular)
     except (TypeError, NameError):
         print 'No files picked.'
     if keep_alive:

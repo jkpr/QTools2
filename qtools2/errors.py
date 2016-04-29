@@ -30,31 +30,5 @@ class XlsformError(Exception):
     pass
 
 
-def filename_error(filename):
-    msg = u'"%s" does not match approved PMA naming scheme (approved %s):\n%s'
-    msg %= (filename, constants.approval_date, constants.odk_file_model)
-    raise XlsformError(msg)
-
-
-def no_form_id(filename):
-    msg = u'"%s" does not have a form_id defined in the settings tab'
-    msg %= filename
-    raise XlsformError(msg)
-
-
-def no_form_title(filename):
-    msg = u'"%s" does not have a form_title defined in the settings tab'
-    msg %= filename
-    raise XlsformError(msg)
-
-
-def bad_filename_and_id(filename, form_id):
-    msg = u'"%s" has non-matching form_id "%s"'
-    msg %= (filename, form_id)
-    raise XlsformError(msg)
-
-
-def bad_filename_and_title(filename, form_title):
-    msg = u'"%s" has non-matching form_title "%s"'
-    msg %= (filename, form_title)
-    raise XlsformError(msg)
+class ConvertError(Exception):
+    pass

@@ -31,7 +31,7 @@ import xlrd
 from pmaxform.xls2xform import xls2xform_convert
 
 import constants
-import errors
+from errors import XlsformError
 
 
 class Xlsform():
@@ -53,7 +53,7 @@ class Xlsform():
         self.settings = self.get_settings()
         self.form_id = self.get_form_id(pma)
         self.form_title = self.get_form_title(pma)
-        self.xml_root = self.get_xml_root()
+        self.xml_root = self.get_xml_root(pma)
 
     def get_settings(self):
         values = {}
@@ -68,28 +68,33 @@ class Xlsform():
         form_id = self.settings.get(constants.FORM_ID, u'')
         if pma:
             if form_id == u'':
-                errors.no_form_id(self.short_name)
+                self.no_form_id(self.short_file)
             expected_id = self.construct_pma_id(self.short_name)
             if expected_id == u'':
-                errors.filename_error(self.short_name)
+                self.filename_error(self.short_file)
             elif expected_id != form_id:
-                errors.bad_filename_and_id(self.short_name, form_id)
+                self.bad_filename_and_id(self.short_file, form_id)
         return form_id
 
     def get_form_title(self, pma):
         form_title = self.settings.get(constants.FORM_TITLE, u'')
         if pma:
             if form_title == u'':
-                errors.no_form_title(self.short_name)
+                self.no_form_title(self.short_file)
             expected_title = self.construct_pma_title(self.short_name)
             if expected_title == u'':
-                errors.filename_error(self.short_name)
+                self.filename_error(self.short_file)
             elif expected_title != form_title:
-                errors.bad_filename_and_title(self.short_name, form_title)
+                self.bad_filename_and_title(self.short_file, form_title)
         return form_title
 
-    def get_xml_root(self):
-        return self.settings.get(constants.XML_ROOT, u'')
+    def get_xml_root(self, pma):
+        xml_root = self.settings.get(constants.XML_ROOT, u'')
+        if pma:
+            if xml_root == u'':
+                expected_xml_root = self.determine_xml_root(self.short_name)
+                self.no_xml_root(self.short_file, expected_xml_root)
+        return xml_root
 
     def xlsform_convert(self):
         return xls2xform_convert(self.path, self.outpath)
@@ -119,6 +124,18 @@ class Xlsform():
         return qtype, country, round, version
 
     @staticmethod
+    def determine_xml_root(filename):
+        """Get XML root from filename without extension
+
+        Note: this function is dependent on the regex.
+        """
+        xml_root = u''
+        qtype = Xlsform.get_identifiers(filename)[0]
+        if qtype:
+            xml_root = unicode(constants.xml_codes[constants.q_codes[qtype]])
+        return xml_root
+
+    @staticmethod
     def construct_pma_id(filename):
         """Build form_id from filename without extension
 
@@ -129,7 +146,8 @@ class Xlsform():
         if qtype and country and round and version:
             id_qtype = constants.q_codes[qtype]
             # implicit conversion to unicode
-            form_id = id_qtype + '-' + country + 'r' + round + '-v' + version
+            form_id = id_qtype + '-' + country.lower() + 'r' + round + '-' + \
+                      version
         return form_id
 
     @staticmethod
@@ -145,3 +163,44 @@ class Xlsform():
             form_title = filename[:i]
         return form_title
 
+    @staticmethod
+    def filename_error(filename):
+        msg = u'"%s" does not match approved PMA naming scheme (approved %s):\n%s'
+        msg %= (filename, constants.approval_date, constants.odk_file_model)
+        raise XlsformError(msg)
+
+    @staticmethod
+    def no_form_id(filename):
+        msg = u'"%s" does not have a form_id defined in the settings tab.'
+        msg %= filename
+        raise XlsformError(msg)
+
+    @staticmethod
+    def no_form_title(filename):
+        msg = u'"%s" does not have a form_title defined in the settings tab.'
+        msg %= filename
+        raise XlsformError(msg)
+
+    @staticmethod
+    def bad_filename_and_id(filename, form_id):
+        msg = u'"%s" has non-matching form_id "%s".'
+        msg %= (filename, form_id)
+        raise XlsformError(msg)
+
+    @staticmethod
+    def bad_filename_and_title(filename, form_title):
+        msg = u'"%s" has non-matching form_title "%s".'
+        msg %= (filename, form_title)
+        raise XlsformError(msg)
+
+    @staticmethod
+    def no_xml_root(filename, expected_xml_root):
+        msg = (u'"%s" does not have an "xml_root" defined in the settings tab. '
+               u'Should be defined as "%s".')
+        if expected_xml_root:
+            msg %= filename, expected_xml_root
+        else:
+            all_xml_roots = constants.xml_codes.values()
+            add_on = u'one of %s' % u', '.join(all_xml_roots)
+            msg %= filename, add_on
+        raise XlsformError(msg)
