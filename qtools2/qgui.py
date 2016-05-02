@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # The MIT License (MIT)
@@ -43,7 +43,7 @@ from Tkinter import Tk
 from tkFileDialog import askopenfilenames
 
 
-def start_gui(keep_alive=False, regular=False, new_version=False):
+def start_gui(keep_alive=False, regular=False, v2=False):
     print 'Please select source MS-Excel files for conversion.'
     Tk().withdraw()
     filenames = askopenfilenames(initialdir=os.getcwd())
@@ -52,7 +52,7 @@ def start_gui(keep_alive=False, regular=False, new_version=False):
             m = 'Expected a tuple as returned value from dialog, got %s'
             m %= type(filenames)
             raise TypeError(m)
-        if new_version:
+        if v2:
             filenames = [unicode(f) for f in filenames]
             convert.xlsform_convert(filenames, regular=regular)
         else:
