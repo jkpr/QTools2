@@ -6,3 +6,4 @@ qtools2/test/*.xlsx
 qtools2/test/*.xml
 *.pyc
 qtools2/.idea
+.idea
