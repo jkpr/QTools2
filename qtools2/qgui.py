@@ -38,6 +38,8 @@ import os
 
 import qxml
 import convert
+from errors import ConvertError
+from qxml import QxmlException
 
 from Tkinter import Tk
 from tkFileDialog import askopenfilenames
@@ -59,6 +61,10 @@ def start_gui(keep_alive=False, regular=False, v2=False):
             qxml.xlsform_convert(filenames, regular=regular)
     except (TypeError, NameError):
         print 'No files picked.'
+    except ConvertError as e:
+        print str(e)
+    except QxmlException:
+        pass
     if keep_alive:
         raw_input('Press enter to end the program.')
 
