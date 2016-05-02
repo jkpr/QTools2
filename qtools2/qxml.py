@@ -49,9 +49,9 @@ import shutil
 import os
 import re
 
-from pyxform.xls2xform import xls2xform_convert
-from pyxform.errors import PyXFormError
-from pyxform.odk_validate import ODKValidateError
+from pmaxform.xls2xform import xls2xform_convert
+from pmaxform.errors import PyXFormError
+from pmaxform.odk_validate import ODKValidateError
 import xlrd
 
 import naming_schemes

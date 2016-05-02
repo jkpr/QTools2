@@ -14,12 +14,8 @@ setup(
     ],
     license='LICENSE.txt',
     description='Useful tools for working with PMA2020 Questionnaires',
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
     install_requires=[
-        'pmaxform>=1.0.1',
-        'pyxform>=0.9.22'
+        'pmaxform>=1.0.1'
     ],
-    dependency_links=[
-        'https://github.com/jkpr/pmaxform/zipball/master#egg=pmaxform-1.0.1'
-    ]
 )

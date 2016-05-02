@@ -32,6 +32,15 @@ parser = argparse.ArgumentParser(description=prog_desc)
 alive_help = ('Include this flag to keep the program alive after conversion. '
               'This is helpful for running in Windows.')
 parser.add_argument('-a', '--alive', action='store_true', help=alive_help)
+
+reg_help = ('This flag indicates the program should convert to XForm and '
+            'not try to make PMA2020-specific edits.')
+parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
+
+v2_help = ('Enforce the new style of PMA2020 form conversion where all '
+              'directives are stored in the XLSForms.')
+parser.add_argument('-v', '--v2', action='store_true', help=v2_help)
+
 args = parser.parse_args()
 
-qgui.start_gui(args.alive)
+qgui.start_gui(keep_alive=args.alive, regular=args.regular, v2=args.v2)
