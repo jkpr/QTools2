@@ -147,7 +147,7 @@ def report_conversion_success(successes, xlsforms):
         print header
         for s, xlsform in zip(successes, xlsforms):
             if s:
-                print u' -- ' + xlsform.short_file
+                print u' -- ' + xlsform.outpath
     if n_failures > 0:
         record = u'/'.join([str(n_failures), str(n_attempts)])
         statement = u' XML Creation Failures (' + record + u') '
@@ -155,7 +155,7 @@ def report_conversion_success(successes, xlsforms):
         print header
         for s, xlsform in zip(successes, xlsforms):
             if not s:
-                print u' -- ' + xlsform.short_file
+                print u' -- ' + xlsform.outpath
     if not all(successes):
         m = (u'*** Removing all XML files because not all conversions were '
              u'successful')
