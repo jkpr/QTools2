@@ -42,7 +42,7 @@ Examples:
 
         $ python -m qtools2.qxml -h
 
-Last modified: 29 April 2016
+Last modified: 3 May 2016
 """
 import argparse
 import shutil
@@ -282,15 +282,17 @@ def xlsform_offline(source, dest, orig='', final=''):
         m = '### Invalid ODK Xform: "%s"! ###' % final_short
         print m
         print e.message
-        print '### Deleting "%s"' % final_short
         # Remove output file if there is an error with ODKValidate
-        os.remove(dest)
+        if os.path.exists(dest):
+            print '### Deleting "%s"' % final_short
+            os.remove(dest)
         return False
     except Exception as e:
-        print e.message
-        print '### Deleting "%s"' % final_short
+        print repr(e)
         # Remove output file if there is an error with ODKValidate
-        os.remove(dest)
+        if os.path.exists(dest):
+            print '### Deleting "%s"' % final_short
+            os.remove(dest)
         return False
     else:
         return True

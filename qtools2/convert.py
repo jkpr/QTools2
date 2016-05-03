@@ -45,7 +45,7 @@ Examples:
         $ python -m qtools2.convert -h
 
 Created: 27 April 2016
-Last modified: 29 April 2016
+Last modified: 3 May 2016
 """
 
 import os
@@ -114,22 +114,25 @@ def xlsform_offline(xlsform):
         m = u'### PyXForm ERROR converting "%s" to XML! ###'
         m %= xlsform.path
         print m
-        print e.message
+        print str(e)
         return False
     except ODKValidateError as e:
         m = u'### Invalid ODK Xform: "%s"! ###'
         m %= xlsform.outpath
         print m
-        print e.message
-        print u'### Deleting "%s"' % xlsform.outpath
+        print str(e)
         # Remove output file if there is an error with ODKValidate
+        if os.path.exists(xlsform.outpath):
+            print u'### Deleting "%s"' % xlsform.outpath
+            os.remove(xlsform.outpath)
         os.remove(xlsform.outpath)
         return False
     except Exception as e:
-        print e.message
-        print u'### Unexpected error: deleting "%s"' % xlsform.outpath
+        print u'### Unexpected error: %s' % repr(e)
         # Remove output file if there is an error with ODKValidate
-        os.remove(xlsform.outpath)
+        if os.path.exists(xlsform.outpath):
+            print u'### Deleting "%s"' % xlsform.outpath
+            os.remove(xlsform.outpath)
         return False
     else:
         return True
