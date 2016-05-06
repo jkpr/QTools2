@@ -24,7 +24,6 @@
 # SOFTWARE.
 
 import os.path
-import itertools
 import re
 
 import xlrd
@@ -57,11 +56,18 @@ class Xlsform():
 
     def get_settings(self):
         values = {}
-        wb = xlrd.open_workbook(self.path)
-        settings = wb.sheet_by_name(constants.SETTINGS)
-        for k, v in itertools.izip_longest(settings.row(0), settings.row(1)):
-            if k.value != u'' and v.value != u'':
-                values[k.value] = v.value
+        try:
+            wb = xlrd.open_workbook(self.path)
+            settings = wb.sheet_by_name(constants.SETTINGS)
+            for k, v in zip(settings.row(0), settings.row(1)):
+                if k.value != u'' and v.value != u'':
+                    values[k.value] = v.value
+        except xlrd.XLRDError:
+            # No settings found
+            pass
+        except IndexError:
+            # Blank settings found
+            pass
         return values
 
     def get_form_id(self, pma):

@@ -73,7 +73,8 @@ def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False):
             msg = u'"%s" does not exist.'
             msg %= f
             error.append(msg)
-        except XLRDError:
+        except XLRDError as e:
+            print repr(e)
             msg = u'"%s" does not appear to be a well-formed MS-Excel file.'
             msg %= f
             error.append(msg)
