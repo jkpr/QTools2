@@ -42,3 +42,9 @@ odk_file_re = naming_schemes.odk_file_re
 
 q_codes = naming_schemes.questionnaire_codes
 xml_codes = naming_schemes.xml_codes
+
+placeholders = naming_schemes.str_to_delete
+
+# Must be a dictionary with exactly one key-value pair
+xml_ns = {'h': 'http://www.w3.org/2002/xforms'}
+logging_xpath = './h:meta/h:logging'

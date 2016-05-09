@@ -3,7 +3,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 PMA2020
+# Copyright (c) 2016 PMA2020
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ import constants
 from errors import XlsformError
 
 
-class Xlsform():
+class Xlsform:
     """Check files and generate resulting path information
 
     Stores path information of input files and determines what intermediate
@@ -53,6 +53,20 @@ class Xlsform():
         self.form_id = self.get_form_id(pma)
         self.form_title = self.get_form_title(pma)
         self.xml_root = self.get_xml_root(pma)
+
+        self.saveInstance = self.get_save_instance()
+        self.saveForm = self.get_save_form()
+
+    def check_external_choices_consistency(self):
+        return True
+
+    def get_save_instance(self):
+        data = []
+        return data
+
+    def get_save_form(self):
+        data = []
+        return data
 
     def get_settings(self):
         values = {}
@@ -80,6 +94,8 @@ class Xlsform():
                 self.filename_error(self.short_file)
             elif expected_id != form_id:
                 self.bad_filename_and_id(self.short_file, form_id)
+        if form_id == u'':
+            form_id = self.short_name
         return form_id
 
     def get_form_title(self, pma):
@@ -92,6 +108,8 @@ class Xlsform():
                 self.filename_error(self.short_file)
             elif expected_title != form_title:
                 self.bad_filename_and_title(self.short_file, form_title)
+        if form_title == u'':
+            form_title = self.form_id
         return form_title
 
     def get_xml_root(self, pma):

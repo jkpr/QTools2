@@ -30,3 +30,7 @@ class XlsformError(Exception):
 
 class ConvertError(Exception):
     pass
+
+
+class XformError(Exception):
+    pass
