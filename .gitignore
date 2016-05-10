@@ -7,3 +7,5 @@ qtools2/test/*.xml
 *.pyc
 qtools2/.idea
 .idea
+qtools2/test/confidential
+.cache

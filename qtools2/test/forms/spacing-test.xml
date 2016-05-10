@@ -1,0 +1,201 @@
+<?xml version="1.0"?>
+<h:html xmlns="http://www.w3.org/2002/xforms" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:h="http://www.w3.org/1999/xhtml" xmlns:jr="http://openrosa.org/javarosa" xmlns:orx="http://openrosa.org/xforms" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <h:head>
+    <h:title>spacing-test</h:title>
+    <model>
+      <instance>
+        <spacing-test id="spacing-test">
+          <space/>
+          <nl/>
+          <xml_nl/>
+          <one_us/>
+          <many_us/>
+          <input1/>
+          <input2/>
+          <joined/>
+          <is_space1/>
+          <is_space2/>
+          <is_nl1/>
+          <is_nl2/>
+          <is_nl3/>
+          <is_nl4/>
+          <is_us1a/>
+          <is_us1b/>
+          <is_us2a/>
+          <is_us2b/>
+          <is_us3a/>
+          <is_us3b/>
+          <meta>
+            <instanceID/>
+          </meta>
+        </spacing-test>
+      </instance>
+      <bind calculate="concat(&quot; &quot;)" nodeset="/spacing-test/space" type="string"/>
+      <bind calculate="concat(&quot;
+&quot;)" nodeset="/spacing-test/nl" type="string"/>
+      <bind calculate="concat(&quot;&#x0a;&quot;)" nodeset="/spacing-test/xml_nl" type="string"/>
+      <bind calculate="concat(&quot;_&quot;)" nodeset="/spacing-test/one_us" type="string"/>
+      <bind calculate="concat(&quot;__________&quot;)" nodeset="/spacing-test/many_us" type="string"/>
+      <bind nodeset="/spacing-test/input1" type="string"/>
+      <bind nodeset="/spacing-test/input2" type="string"/>
+      <bind calculate="join(&quot;&#x0a;&quot;, /spacing-test/input1 , /spacing-test/input2 )" nodeset="/spacing-test/joined" type="string"/>
+      <bind nodeset="/spacing-test/is_space1" type="select1"/>
+      <bind nodeset="/spacing-test/is_space2" type="select1"/>
+      <bind nodeset="/spacing-test/is_nl1" type="select1"/>
+      <bind nodeset="/spacing-test/is_nl2" type="select1"/>
+      <bind nodeset="/spacing-test/is_nl3" type="select1"/>
+      <bind nodeset="/spacing-test/is_nl4" type="select1"/>
+      <bind nodeset="/spacing-test/is_us1a" type="select1"/>
+      <bind nodeset="/spacing-test/is_us1b" type="select1"/>
+      <bind nodeset="/spacing-test/is_us2a" type="select1"/>
+      <bind nodeset="/spacing-test/is_us2b" type="select1"/>
+      <bind nodeset="/spacing-test/is_us3a" type="select1"/>
+      <bind nodeset="/spacing-test/is_us3b" type="select1"/>
+      <bind calculate="concat('uuid:', uuid())" nodeset="/spacing-test/meta/instanceID" readonly="true()" type="string"/>
+    </model>
+  </h:head>
+  <h:body>
+    <input ref="/spacing-test/input1">
+      <label>Type one word</label>
+    </input>
+    <input ref="/spacing-test/input2">
+      <label>Type another word</label>
+    </input>
+    <select1 ref="/spacing-test/is_space1">
+      <label>1. Do you see a space between what you entered: <output value=" /spacing-test/input1 "/> <output value=" /spacing-test/input2 "/></label><item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_space2">
+      <label>2. Do you see a space between what you entered: <output value=" /spacing-test/input1 "/><output value=" /spacing-test/space "/><output value=" /spacing-test/input2 "/></label><item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_nl1">
+      <label>3. Do you see a new line between what you entered:
+<output value=" /spacing-test/input1 "/>
+<output value=" /spacing-test/input2 "/></label><item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_nl2">
+      <label>4. Do you see a new line between what you entered:
+<output value=" /spacing-test/input1 "/><output value=" /spacing-test/nl "/>
+        
+<output value=" /spacing-test/input2 "/></label><item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_nl3">
+      <label>5. Do you see a new line between what you entered:
+<output value=" /spacing-test/input1 "/><output value=" /spacing-test/xml_nl "/><output value=" /spacing-test/xml_nl "/><output value=" /spacing-test/input2 "/></label>
+      <item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_nl4">
+      <label>5.5. Do you see a new line between what you entered:
+<output value=" /spacing-test/joined "/></label><item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_us1a">
+      <label>6. Do you see an underscore: _</label>
+      <item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_us1b">
+      <label>7. Do you see an underscore: <output value=" /spacing-test/one_us "/></label><item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_us2a">
+      <label>8. Do you see many underscores: . . . . . . . . . . . . . . . . . . . . . . .</label>
+      <item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_us2b">
+      <label>9. Do you see many underscores: <output value=" /spacing-test/many_us "/></label><item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_us3a">
+      <label>10. Do you see many underscores:
+
+Hello. My name is _._._._._._._._._._._._._._._. What is your name?</label>
+      <item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+    <select1 ref="/spacing-test/is_us3b">
+      <label>11. Do you see many underscores:
+
+Hello. My name is <output value=" /spacing-test/many_us "/>. What is your name?</label>
+      <item>
+        <label>Yes</label>
+        <value>yes</value>
+      </item>
+      <item>
+        <label>No</label>
+        <value>no</value>
+      </item>
+    </select1>
+  </h:body>
+</h:html>

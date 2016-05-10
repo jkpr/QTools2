@@ -23,18 +23,22 @@
 import xml.etree.ElementTree as ElementTree
 
 import constants
-import errors
+from errors import XformError
 from __init__ import __version__ as VERSION
 
 
 class Xform:
 
-    def __init__(self, xlsform):
-        self.filename = xlsform.outpath
+    def __init__(self, xlsform=None, filename=None, form_id=None):
+        if xlsform is not None:
+            self.filename = xlsform.outpath
+            self.form_id = xlsform.form_id
+        elif filename is not None:
+            self.filename = filename
+            self.form_id = filename if form_id is None else form_id
         self.data = []
         with open(self.filename) as f:
             self.data = list(f)
-        self.form_id = xlsform.form_id
 
     def make_edits(self):
         self.newline_fix()
@@ -69,7 +73,8 @@ class Xform:
         if instance_xml is None:
             m = 'Unable to locate XML instance in "{}".'.format(self.filename)
             m += ' Please confirm instance ID in settings tab.'
-            raise errors.XformError(m)
+            raise XformError(m)
+        return instance_xml
 
     def discover_all(self, xpaths):
         outcomes = []
@@ -77,6 +82,7 @@ class Xform:
         for xpath in xpaths:
             discovered = self.discover_xpath(xpath, instance)
             outcomes.append(discovered)
+        return outcomes
 
     def discover_xpath(self, xpath, instance):
         result = False
