@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import os.path
 import xml.etree.ElementTree as ElementTree
 
 import constants
@@ -35,7 +36,9 @@ class Xform:
             self.form_id = xlsform.form_id
         elif filename is not None:
             self.filename = filename
-            self.form_id = filename if form_id is None else form_id
+            short_filename = os.path.split(self.filename)[1]
+            short_name = os.path.splitext(short_filename)[0]
+            self.form_id = short_name if form_id is None else form_id
         self.data = []
         with open(self.filename) as f:
             self.data = list(f)
@@ -52,7 +55,7 @@ class Xform:
         new_data = []
         for line in self.data:
             for fluff in constants.placeholders:
-                line = line.replace(fluff,"")
+                line = line.replace(fluff, "")
             new_data.append(line)
         self.data = new_data
 

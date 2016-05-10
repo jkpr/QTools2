@@ -227,6 +227,8 @@ def xform_edit_and_check(xlsforms):
         body = format_lines(warnings)
         print header
         print body
+    # TODO much later: delete forms if there are warnings
+    # TODO sooner: print out message that all forms were edited properly
 
 
 def validate_xpaths(xlsforms, xforms):
