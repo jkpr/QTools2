@@ -1,3 +1,9 @@
+v0.2.1, 11 May 2016
+ * Evaluation of xpaths supplied through save_instance.
+ * Support for external choices and "itemsets.csv"
+ * Meet all traditional XML editing requirements (e.g. newline fix)
+ * First unittests added
+
 v0.2.0, 3 May 2016
  * New release with many updates.
  * Support for pmaxform. This brings xml_root, save_instance, save_form, and
