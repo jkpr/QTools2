@@ -30,6 +30,7 @@ class XformTest(unittest.TestCase):
             self.assertTrue(this_xform.has_logging(), msg=msg)
 
     def test_has_no_logging(self):
+        self.longMessage = True
         no_logging = [
             u'spacing-test.xml'
         ]

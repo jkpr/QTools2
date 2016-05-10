@@ -28,7 +28,7 @@
 An upgrade over the former qxml methodology, this is qtools2 version >= 0.2.0.
 
 This module provides the functionality to convert from XLSForm to XForm. It
-also can apply PMA2020-specific constraints. It performs Basic validity checks,
+also can apply PMA2020-specific constraints. It performs basic validity checks,
 PMA-specific validity checks if necessary, and can append a suffix to the file
 name. A command line interface is available when using this module as __main__.
 
@@ -219,6 +219,7 @@ def xform_edit_and_check(xlsforms):
     xforms = [Xform(xlsform) for xlsform in xlsforms]
     for xform in xforms:
         xform.make_edits()
+        xform.overwrite()
     report_logging(xforms)
     warnings = validate_xpaths(xlsforms, xforms)
     if warnings:
