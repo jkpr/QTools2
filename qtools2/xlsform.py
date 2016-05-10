@@ -25,6 +25,7 @@
 
 import os.path
 import re
+import shutil
 
 import xlrd
 from pmaxform.xls2xform import xls2xform_convert
@@ -49,29 +50,80 @@ class Xlsform:
             self.outpath = self.get_outpath(path, suffix)
         else:
             self.outpath = outpath
-        self.settings = self.get_settings()
+        self.media_dir = self.get_media_dir(self.outpath)
+
+        wb = self.get_workbook()
+        # Survey
+        self.save_instance = self.filter_column(wb, constants.SAVE_INSTANCE)[1:]
+        self.save_form = self.filter_column(wb, constants.SAVE_FORM)[1:]
+        self.linking_consistency(self.path, self.save_instance, self.save_form)
+        # External choices
+        self.external_choices_consistency(self.path, wb)
+        # Settings
+        self.settings = self.get_settings(wb)
         self.form_id = self.get_form_id(pma)
         self.form_title = self.get_form_title(pma)
         self.xml_root = self.get_xml_root(pma)
 
-        self.saveInstance = self.get_save_instance()
-        self.saveForm = self.get_save_form()
+    def get_workbook(self):
+        # IO Error if not existing
+        # Perhaps catch xlrd.XLRDError and throw XlsformError?
+        wb = xlrd.open_workbook(self.path)
+        return wb
 
-    def check_external_choices_consistency(self):
-        return True
+    def xlsform_convert(self):
+        msg = xls2xform_convert(self.path, self.outpath)
+        self.assert_itemsets_moved()
+        return msg
 
-    def get_save_instance(self):
-        data = []
-        return data
+    def assert_itemsets_moved(self):
+        base_dir = os.path.split(self.outpath)[0]
+        itemsets = os.path.join(base_dir, constants.ITEMSETS)
+        if os.path.exists(itemsets):
+            if not os.path.exists(self.media_dir):
+                os.mkdir(self.media_dir)
+            new_itemsets = os.path.join(self.media_dir, constants.ITEMSETS)
+            shutil.move(itemsets, new_itemsets)
 
-    def get_save_form(self):
-        data = []
-        return data
+    def cleanup(self):
+        if os.path.exists(self.outpath):
+            os.remove(self.outpath)
+        if os.path.exists(self.media_dir):
+            shutil.rmtree(self.media_dir)
 
-    def get_settings(self):
+    @staticmethod
+    def filter_column(wb, header):
+        found = []
+        try:
+            survey = wb.sheet_by_name(constants.SURVEY)
+            headers = survey.row_values(0)
+            col = headers.index(header)
+            full_column = wb.col_values(col)
+            found = filter(None, full_column)
+        except (xlrd.XLRDError, IndexError, ValueError):
+            # No survey found, nothing in survey, header not found
+            pass
+        return found
+
+    @staticmethod
+    def find_external_type(wb):
+        found = False
+        type_column = Xlsform.filter_column(wb, constants.TYPE)
+        for this_type in type_column:
+            first_word = this_type.split(u' ', 1)
+            if first_word in constants.EXTERNAL_TYPES:
+                found = True
+                break
+        return found
+
+    @staticmethod
+    def find_external_choices(wb):
+        return constants.EXTERNAL_CHOICES in wb.sheet_names()
+
+    @staticmethod
+    def get_settings(wb):
         values = {}
         try:
-            wb = xlrd.open_workbook(self.path)
             settings = wb.sheet_by_name(constants.SETTINGS)
             for k, v in zip(settings.row(0), settings.row(1)):
                 if k.value != u'' and v.value != u'':
@@ -120,9 +172,6 @@ class Xlsform:
                 self.no_xml_root(self.short_file, expected_xml_root)
         return xml_root
 
-    def xlsform_convert(self):
-        return xls2xform_convert(self.path, self.outpath)
-
     @staticmethod
     def get_outpath(path, suffix):
         short_name, ext = os.path.splitext(path)
@@ -130,6 +179,14 @@ class Xlsform:
             short_name += suffix
         short_name += constants.XML_EXT
         return short_name
+
+    @staticmethod
+    def get_media_dir(xmlpath):
+        base_dir, short_file = os.path.split(xmlpath)
+        short_name = os.path.splitext(short_file)
+        media_dir = short_name + constants.MEDIA_DIR_EXT
+        full_media_dir = os.path.join(base_dir, media_dir)
+        return full_media_dir
 
     @staticmethod
     def get_identifiers(filename):
@@ -189,7 +246,8 @@ class Xlsform:
 
     @staticmethod
     def filename_error(filename):
-        msg = u'"%s" does not match approved PMA naming scheme (approved %s):\n%s'
+        msg = (u'"%s" does not match approved PMA naming scheme '
+               u'(approved %s):\n%s')
         msg %= (filename, constants.approval_date, constants.odk_file_model)
         raise XlsformError(msg)
 
@@ -228,3 +286,29 @@ class Xlsform:
             add_on = u'one of %s' % u', '.join(all_xml_roots)
             msg %= filename, add_on
         raise XlsformError(msg)
+
+    @staticmethod
+    def external_choices_consistency(filename, wb):
+        has_external_type = Xlsform.has_external_type(wb)
+        has_external_choices_sheet = Xlsform.has_external_choices_sheet(wb)
+        inconsistent = has_external_type ^ has_external_choices_sheet
+        if inconsistent:
+            if has_external_type:
+                m = (u'"{}" has survey question of type "external" but no '
+                     u'external choices sheet')
+            else:
+                m = (u'"{}" has external choices sheet but no survey question '
+                     u'of type "external"')
+            raise XlsformError(m.format(filename))
+
+    @staticmethod
+    def linking_consistency(filename, save_instance, save_form):
+        has_save_instance = len(save_instance) > 0
+        has_save_form = len(save_form) > 0
+        inconsistent = has_save_instance ^ has_save_form
+        if inconsistent:
+            if has_save_instance:
+                m = u'"{}" defines save_instance value but no save_form value'
+            else:
+                m = u'"{}" defines save_form value but no save_instance value'
+            raise XlsformError(m.format(filename))

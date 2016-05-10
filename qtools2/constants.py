@@ -1,9 +1,6 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 PMA2020
+# Copyright (c) 2016 PMA2020
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,11 +27,20 @@ XML_EXT = u'.xml'
 SURVEY = u'survey'
 CHOICES = u'choices'
 SETTINGS = u'settings'
+EXTERNAL_CHOICES = u'external choices'
+EXTERNAL_TYPES = [u'select_one_external', u'select_multiple_external']
+
+SAVE_INSTANCE = u'save_instance'
+SAVE_FORM = u'save_form'
+TYPE = u'type'
 
 FORM_ID = u'form_id'
 FORM_TITLE = u'form_title'
 XML_ROOT = u'xml_root'
 LOGGING = u'logging'
+
+ITEMSETS = u'itemsets.csv'
+MEDIA_DIR_EXT = u'-media'
 
 approval_date = u'May 2015'
 odk_file_model = naming_schemes.odk_file_model

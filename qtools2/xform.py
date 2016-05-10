@@ -1,6 +1,3 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2016 PMA2020
@@ -39,6 +36,11 @@ class Xform:
             self.data = list(f)
         self.form_id = xlsform.form_id
 
+    def make_edits(self):
+        self.newline_fix()
+        self.remove_placeholders()
+        self.inject_version()
+
     def newline_fix(self):
         self.data = [line.replace("&amp;#x", "&#x") for line in self.data]
 
@@ -62,41 +64,47 @@ class Xform:
     def get_instance_xml(self):
         xml_text = ''.join(self.data)
         root = ElementTree.fromstring(xml_text)
-        query = ".//[@id='{}']".format(self.form_id)
+        query = ".//*[@id='{}']".format(self.form_id)
         instance_xml = root.find(query)
         if instance_xml is None:
             m = 'Unable to locate XML instance in "{}".'.format(self.filename)
             m += ' Please confirm instance ID in settings tab.'
             raise errors.XformError(m)
 
-    def has_logging(self):
-        pass
-
-    def evaluate_all(self, xpaths):
-        fails = []
+    def discover_all(self, xpaths):
+        outcomes = []
         instance = self.get_instance_xml()
         for xpath in xpaths:
-            try:
-                self.evaluate_xpath(xpath, instance)
-            except errors.XformError as e:
-                fails.append(str(e))
+            discovered = self.discover_xpath(xpath, instance)
+            outcomes.append(discovered)
 
-    def evaluate_xpath(self, xpath, instance):
-        full_xpath = self.convert_xpath(xpath)
-        found = instance.find(full_xpath, constants.xml_ns)
-        if found is None:
-            m = 'Invalid xpath: "{}"'.format(xpath)
-            raise errors.XformError(m)
-        return found
+    def discover_xpath(self, xpath, instance):
+        result = False
+        try:
+            full_root, full_xpath = self.convert_xpath(xpath)
+            found = instance.find(full_xpath, constants.xml_ns)
+            roots_match = full_root == instance.tag
+            result = found is not None and roots_match
+        except (IndexError, SyntaxError):
+            # Unable to split properly, bad xpath syntax
+            pass
+        return result
+
+    def has_logging(self):
+        ns_key = constants.xml_ns.keys()[0]
+        logging_xpath = './{}:meta/{}:logging'.format(ns_key, ns_key)
+        instance = self.get_instance_xml()
+        found = instance.find(logging_xpath, constants.xml_ns)
+        return found is not None
 
     @staticmethod
     def convert_xpath(xpath):
-        if not xpath.startswith('/'):
-            m = 'Xpath "{}" must start with "/"'.format(xpath)
-            raise errors.XformError(m)
         strsplit = xpath.split('/')
-        descendants = strsplit[2:]
         ns_key = constants.xml_ns.keys()[0]
+        ns_val = constants.xml_ns[ns_key]
+        root = strsplit[1]
+        full_root = '{{{0}}}{1}'.format(ns_val, root)
+        descendants = strsplit[2:]
         full_descendants = [':'.join([ns_key, d]) for d in descendants]
         full_xpath = './' + '/'.join(full_descendants)
-        return full_xpath
+        return full_root, full_xpath
