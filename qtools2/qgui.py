@@ -31,7 +31,7 @@ knobs and whistles for setting options and choosing files.
 Currently, the code prints to console and the only graphical part is the
 file picker.
 
-Last edited: 29 April 2016
+Last edited: 11 May 2016
 """
 
 import os
