@@ -17,7 +17,7 @@ python -m qtools2.convert --help
 
 Note: as of v0.2.1, May 2016, the `qtools2.qxml` module has been deprecated.
 
-## Point and click usage
+## Point-and-click usage
 
 If the (Windows) user wishes to double-click an icon, use an appropriate file from the `scripts` folder of this project.
 
