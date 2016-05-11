@@ -402,7 +402,7 @@ def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
 
 
 def warn_deprecated():
-    msg = ('-v~^*^~v- Use of qtools2.qxml is now deprecated (as of v0.2.1, '
+    msg = ('-v~^*^~v- Module qtools2.qxml is now deprecated (as of v0.2.1, '
            'May 2016). Use qtools2.convert instead -v~^*^~v-')
     print msg
 

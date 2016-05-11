@@ -36,10 +36,9 @@ Last edited: 29 April 2016
 
 import os
 
-import qxml
 import convert
+import constants
 from errors import ConvertError
-from qxml import QxmlException
 
 from Tkinter import Tk
 from tkFileDialog import askopenfilenames
@@ -54,17 +53,16 @@ def start_gui(keep_alive=False, regular=False, v2=False):
             m = 'Expected a tuple as returned value from dialog, got %s'
             m %= type(filenames)
             raise TypeError(m)
-        if v2:
-            filenames = [unicode(f) for f in filenames]
-            convert.xlsform_convert(filenames, regular=regular)
-        else:
-            qxml.xlsform_convert(filenames, regular=regular)
+        filenames = [unicode(f) for f in filenames]
+        kwargs = {
+            constants.PMA: not regular,
+            constants.V2: v2
+        }
+        convert.xlsform_convert(filenames, **kwargs)
     except (TypeError, NameError):
         print 'No files picked.'
     except ConvertError as e:
         print str(e)
-    except QxmlException:
-        pass
     if keep_alive:
         raw_input('Press enter to end the program.')
 

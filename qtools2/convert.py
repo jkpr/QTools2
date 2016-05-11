@@ -39,13 +39,13 @@ Examples:
         $ python -m qtools2.convert NER1*-v1-*.xlsx
         $ python -m qtools2.convert file1.xlsx [file2.xlsx ...]
 
-    The default options are to overwrite old files, and to make PMA-specific
-    edits. For help::
+    Several options are set by default. All can be set explicitly in
+    command-line usage. For help::
 
         $ python -m qtools2.convert -h
 
 Created: 27 April 2016
-Last modified: 10 May 2016
+Last modified: 11 May 2016
 """
 
 import os
@@ -122,12 +122,6 @@ def xlsform_convert(xlsxfiles, **kwargs):
         remove_all_successes(successes, xlsforms)
 
 
-def remove_all_successes(successes, xlsforms):
-    for success, xlsform in zip(successes, xlsforms):
-        if success:
-            xlsform.cleanup()
-
-
 def xlsform_offline(xlsform):
     try:
         warnings = xlsform.xlsform_convert()
@@ -169,66 +163,6 @@ def xlsform_offline(xlsform):
         return True
 
 
-def report_conversion_success(successes, xlsforms):
-    n_attempts = len(successes)
-    n_successes = successes.count(True)
-    n_failures = n_attempts - n_successes
-    width = 50
-    if n_successes > 0:
-        record = u'/'.join([str(n_successes), str(n_attempts)])
-        statement = u' XML Creation Successes (' + record + u') '
-        header = statement.center(width, u'=')
-        print header
-        for s, xlsform in zip(successes, xlsforms):
-            if s:
-                print u' -- ' + xlsform.outpath
-    if n_failures > 0:
-        record = u'/'.join([str(n_failures), str(n_attempts)])
-        statement = u' XML Creation Failures (' + record + u') '
-        header = statement.center(width, u'=')
-        print header
-        for s, xlsform in zip(successes, xlsforms):
-            if not s:
-                print u' -- ' + xlsform.outpath
-    if n_attempts > 0:
-        print
-
-def check_hq_fq_match(xlsforms):
-    hq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'HHQ']
-    fq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'FRS']
-    all_f_items = [Xlsform.get_identifiers(f.short_name) for f in fq]
-    for one_h in hq:
-        h_items = Xlsform.get_identifiers(one_h.short_name)
-        for i, f_items in enumerate(all_f_items):
-            same = all(h == f for h, f in zip(h_items[1:], f_items[1:]))
-            if same:
-                all_f_items.pop(i)
-                fq.pop(i)
-                break
-            else:
-                hq_fq_mismatch(one_h.short_name)
-    if fq:
-        hq_fq_mismatch(fq[0].short_file)
-
-
-def check_save_form_match(xlsforms):
-    msg = []
-    all_form_ids = [xlsform.form_id for xlsform in xlsforms]
-    for xlsform in xlsforms:
-        save_form = xlsform.save_form
-        if len(save_form) > 1:
-            m = (u'"{}" has more than one save_form defined. Unpredictable '
-                 u'behavior ahead!')
-            m = m.format(xlsform.path)
-            msg.append(m)
-        for form_id in save_form:
-            if form_id not in all_form_ids:
-                m = u'"{}" tries to link with non-existent form_id "{}"'
-                m = m.format(xlsform.path, form_id)
-                msg.append(m)
-    return msg
-
-
 def xform_edit_and_check(xlsforms, strict_linking):
     xforms = [Xform(xlsform) for xlsform in xlsforms]
     for xform in xforms:
@@ -248,16 +182,6 @@ def xform_edit_and_check(xlsforms, strict_linking):
             header = (u'Warnings from qtools2 xform editing')
             format_and_warn(header, linking_report)
     report_edit_success(xlsforms)
-
-
-def report_edit_success(xlsforms):
-    n_forms = len(xlsforms)
-    record = u'({}/{})'.format(n_forms, n_forms)
-    msg = u' XML EDITING SUCCESSES {} '.format(record)
-    m = msg.center(50, '=')
-    print m
-    for xlsform in xlsforms:
-        print u' -- {}'.format(xlsform.outpath)
 
 
 def validate_xpaths(xlsforms, xforms):
@@ -292,6 +216,37 @@ def validate_xpaths(xlsforms, xforms):
     return warnings
 
 
+def remove_all_successes(successes, xlsforms):
+    for success, xlsform in zip(successes, xlsforms):
+        if success:
+            xlsform.cleanup()
+
+
+def report_conversion_success(successes, xlsforms):
+    n_attempts = len(successes)
+    n_successes = successes.count(True)
+    n_failures = n_attempts - n_successes
+    width = 50
+    if n_successes > 0:
+        record = u'/'.join([str(n_successes), str(n_attempts)])
+        statement = u' XML Creation Successes (' + record + u') '
+        header = statement.center(width, u'=')
+        print header
+        for s, xlsform in zip(successes, xlsforms):
+            if s:
+                print u' -- ' + xlsform.outpath
+    if n_failures > 0:
+        record = u'/'.join([str(n_failures), str(n_attempts)])
+        statement = u' XML Creation Failures (' + record + u') '
+        header = statement.center(width, u'=')
+        print header
+        for s, xlsform in zip(successes, xlsforms):
+            if not s:
+                print u' -- ' + xlsform.outpath
+    if n_attempts > 0:
+        print
+
+
 def report_logging(xforms):
     has = [xform for xform in xforms if xform.has_logging()]
     has_not = [xform for xform in xforms if not xform.has_logging()]
@@ -311,6 +266,60 @@ def report_logging(xforms):
         for xform in has_not:
             print u' -- %s' % xform.filename
         print
+
+
+def report_edit_success(xlsforms):
+    n_forms = len(xlsforms)
+    record = u'({}/{})'.format(n_forms, n_forms)
+    msg = u' XML EDITING SUCCESSES {} '.format(record)
+    m = msg.center(50, u'=')
+    print m
+    for xlsform in xlsforms:
+        print u' -- {}'.format(xlsform.outpath)
+
+
+def check_hq_fq_match(xlsforms):
+    hq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'HHQ']
+    fq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'FRS']
+    all_f_items = [Xlsform.get_identifiers(f.short_name) for f in fq]
+    for one_h in hq:
+        h_items = Xlsform.get_identifiers(one_h.short_name)
+        for i, f_items in enumerate(all_f_items):
+            same = all(h == f for h, f in zip(h_items[1:], f_items[1:]))
+            if same:
+                all_f_items.pop(i)
+                fq.pop(i)
+                break
+            else:
+                hq_fq_mismatch(one_h.short_name)
+    if fq:
+        hq_fq_mismatch(fq[0].short_file)
+
+
+def hq_fq_mismatch(filename):
+    msg = (u'"%s" does not have a matching (by country, round, and version) '
+           u'FQ/HQ questionnaire.\nHQ and FQ must be edited together or not '
+           u'at all.')
+    msg %= filename
+    raise XlsformError(msg)
+
+
+def check_save_form_match(xlsforms):
+    msg = []
+    all_form_ids = [xlsform.form_id for xlsform in xlsforms]
+    for xlsform in xlsforms:
+        save_form = xlsform.save_form
+        if len(save_form) > 1:
+            m = (u'"{}" has more than one save_form defined. Unpredictable '
+                 u'behavior ahead!')
+            m = m.format(xlsform.path)
+            msg.append(m)
+        for form_id in save_form:
+            if form_id not in all_form_ids:
+                m = u'"{}" tries to link with non-existent form_id "{}"'
+                m = m.format(xlsform.path, form_id)
+                msg.append(m)
+    return msg
 
 
 def get_overwrite_errors(xlsforms):
@@ -345,14 +354,6 @@ def format_lines(lines):
             body.append(m)
     text = u'\n'.join(body)
     return text
-
-
-def hq_fq_mismatch(filename):
-    msg = (u'"%s" does not have a matching (by country, round, and version) '
-           u'FQ/HQ questionnaire.\nHQ and FQ must be edited together or not '
-           u'at all.')
-    msg %= filename
-    raise XlsformError(msg)
 
 
 if __name__ == '__main__':
