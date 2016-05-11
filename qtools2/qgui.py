@@ -44,7 +44,7 @@ from Tkinter import Tk
 from tkFileDialog import askopenfilenames
 
 
-def start_gui(keep_alive=False, regular=False, v2=False):
+def start_gui(keep_alive=True, regular=False, v2=False):
     print 'Please select source MS-Excel files for conversion.'
     Tk().withdraw()
     filenames = askopenfilenames(initialdir=os.getcwd())
