@@ -50,6 +50,7 @@ Last modified: 10 May 2016
 
 import os
 import itertools
+import traceback
 
 from pmaxform.errors import PyXFormError
 from pmaxform.odk_validate import ODKValidateError
@@ -59,20 +60,29 @@ from cli import command_line_interface
 from xlsform import Xlsform
 from xform import Xform
 import qxmledit
+import constants
 
 from errors import XlsformError
 from errors import XformError
 from errors import ConvertError
 
 
-def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False,
-                    v2=False):
-    pma = not regular
+def xlsform_convert(xlsxfiles, **kwargs):
+    suffix = kwargs.get(constants.SUFFIX, u'')
+    preexisting = kwargs.get(constants.PREEXISTING, False)
+    pma = kwargs.get(constants.PMA, True)
+    v2 = kwargs.get(constants.V2, False)
+    check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
+    strict_linking = kwargs.get(constants.STRICT_LINKING, True)
+
     xlsforms = []
     error = []
     for f in set(xlsxfiles):
         try:
-            xlsforms.append(Xlsform(f, suffix=suffix, pma=pma))
+            xlsform = Xlsform(f, suffix=suffix, pma=pma)
+            xlsforms.append(xlsform)
+            if check_versioning:
+                xlsform.version_consistency()
         except XlsformError as e:
             error.append(str(e))
         except IOError:
@@ -84,20 +94,16 @@ def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False,
             msg %= f
             error.append(msg)
         except Exception as e:
+            traceback.print_exc()
             error.append(repr(e))
     if preexisting:
         overwrite_errors = get_overwrite_errors(xlsforms)
         error.extend(overwrite_errors)
-    save_form_msg = check_save_form_match(xlsforms)
     if pma:
-        error.extend(save_form_msg)
         try:
             check_hq_fq_match(xlsforms)
         except XlsformError as e:
             error.append(str(e))
-    else:
-        if save_form_msg:
-            format_and_warn(save_form_msg)
     if error:
         header = u'The following {} error(s) prevent qtools2 from continuing'
         header = header.format(len(error))
@@ -106,7 +112,7 @@ def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False,
     report_conversion_success(successes, xlsforms)
     all_wins = all(successes)
     if all_wins and v2:
-        xform_edit_and_check(xlsforms)
+        xform_edit_and_check(xlsforms, strict_linking)
     elif all_wins and not v2:
         qxmledit.edit_all_checkers(xlsforms=xlsforms)
     else:
@@ -184,7 +190,8 @@ def report_conversion_success(successes, xlsforms):
         for s, xlsform in zip(successes, xlsforms):
             if not s:
                 print u' -- ' + xlsform.outpath
-
+    if n_attempts > 0:
+        print
 
 def check_hq_fq_match(xlsforms):
     hq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'HHQ']
@@ -222,20 +229,24 @@ def check_save_form_match(xlsforms):
     return msg
 
 
-def xform_edit_and_check(xlsforms):
+def xform_edit_and_check(xlsforms, strict_linking):
     xforms = [Xform(xlsform) for xlsform in xlsforms]
     for xform in xforms:
         xform.make_edits()
         xform.overwrite()
     report_logging(xforms)
-    error_report = validate_xpaths(xlsforms, xforms)
-    if error_report:
+    linking_report = validate_xpaths(xlsforms, xforms)
+    if linking_report:
         for xlsform in xlsforms:
             xlsform.cleanup()
-        header = (u'Generated files deleted! Please address {} error(s) from '
-                  u'qtools2 xform editing')
-        header = header.format(len(error_report))
-        format_and_raise(header, error_report)
+        if strict_linking:
+            header = (u'Generated files deleted! Please address {} error(s) '
+                      u'from qtools2 xform editing')
+            header = header.format(len(linking_report))
+            format_and_raise(header, linking_report)
+        else:
+            header = (u'Warnings from qtools2 xform editing')
+            format_and_warn(header, linking_report)
     report_edit_success(xlsforms)
 
 
@@ -244,10 +255,9 @@ def report_edit_success(xlsforms):
     record = u'({}/{})'.format(n_forms, n_forms)
     msg = u' XML EDITING SUCCESSES {} '.format(record)
     m = msg.center(50, '=')
-    print u''
     print m
     for xlsform in xlsforms:
-        print u' -- {}' + xlsform.outpath
+        print u' -- {}'.format(xlsform.outpath)
 
 
 def validate_xpaths(xlsforms, xforms):
@@ -268,9 +278,9 @@ def validate_xpaths(xlsforms, xforms):
                     # Form id could match a different form
                     no_form_id_match[i] = True
                     pass
-            if all(no_form_id_match):
-                m = u'"{}" defines save_form with non-existent form_id'
-                m = m.format(xlsform.path)
+            if all(no_form_id_match) and len(no_form_id_match) > 0:
+                m = u'"{}" defines save_form with non-existent form_id "{}"'
+                m = m.format(xlsform.path, xlsform.save_form[0])
                 raise XformError(m)
             to_report = itertools.compress(this_save_instance, not_found)
             for item in to_report:
@@ -289,18 +299,18 @@ def report_logging(xforms):
         m = u' FORMS WITH LOGGING (%d/%d) '
         m %= (len(has), len(xforms))
         msg = m.center(50, u'=')
-        print u''
         print msg
         for xform in has:
             print u' -- %s' % xform.filename
+        print
     if has_not:
         m = u' FORMS W/O LOGGING (%d/%d) '
         m %= (len(has_not), len(xforms))
         msg = m.center(50, u'=')
-        print u''
         print msg
         for xform in has_not:
             print u' -- %s' % xform.filename
+        print
 
 
 def get_overwrite_errors(xlsforms):
@@ -309,16 +319,16 @@ def get_overwrite_errors(xlsforms):
     return [template.format(f) for f in conflicts]
 
 
-def format_and_warn(messages):
-    header = u'*** Warnings from qtools2 xlsform conversion'
+def format_and_warn(headline, messages):
+    header = u'*** {}'.format(headline)
     body = format_lines(messages)
     print header
     print body
+    print
 
 
 def format_and_raise(headline, messages):
     header = u'### {}'.format(headline)
-    header %= len(messages)
     body = format_lines(messages)
     text = u'\n'.join([header, body])
     raise ConvertError(text)
@@ -346,8 +356,8 @@ def hq_fq_mismatch(filename):
 
 
 if __name__ == '__main__':
-    xlsxfiles, suffix, preexisting, regular, v2 = command_line_interface()
+    xlsxfiles, kwargs = command_line_interface()
     try:
-        xlsform_convert(xlsxfiles, suffix, preexisting, regular, v2)
+        xlsform_convert(xlsxfiles, **kwargs)
     except ConvertError as e:
         print str(e)

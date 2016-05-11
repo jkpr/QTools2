@@ -26,6 +26,7 @@
 import os.path
 import re
 import shutil
+import itertools
 
 import xlrd
 from pmaxform.xls2xform import xls2xform_convert
@@ -98,7 +99,7 @@ class Xlsform:
             survey = wb.sheet_by_name(constants.SURVEY)
             headers = survey.row_values(0)
             col = headers.index(header)
-            full_column = wb.col_values(col)
+            full_column = survey.col_values(col)
             found = filter(None, full_column)
         except (xlrd.XLRDError, IndexError, ValueError):
             # No survey found, nothing in survey, header not found
@@ -183,7 +184,7 @@ class Xlsform:
     @staticmethod
     def get_media_dir(xmlpath):
         base_dir, short_file = os.path.split(xmlpath)
-        short_name = os.path.splitext(short_file)
+        short_name = os.path.splitext(short_file)[0]
         media_dir = short_name + constants.MEDIA_DIR_EXT
         full_media_dir = os.path.join(base_dir, media_dir)
         return full_media_dir
@@ -297,8 +298,8 @@ class Xlsform:
 
     @staticmethod
     def external_choices_consistency(filename, wb):
-        has_external_type = Xlsform.has_external_type(wb)
-        has_external_choices_sheet = Xlsform.has_external_choices_sheet(wb)
+        has_external_type = Xlsform.find_external_type(wb)
+        has_external_choices_sheet = Xlsform.find_external_choices(wb)
         inconsistent = has_external_type ^ has_external_choices_sheet
         if inconsistent:
             if has_external_type:
@@ -320,3 +321,25 @@ class Xlsform:
             else:
                 m = u'"{}" defines save_form value but no save_instance value'
             raise XlsformError(m.format(filename))
+
+    def version_consistency(self):
+        version_re = ur'[Vv](\d+)'
+        prog = re.compile(version_re)
+        short_outfile = os.path.split(self.outpath)[1]
+        short_outname = os.path.splitext(short_outfile)[0]
+        to_check = itertools.chain([
+            short_outname,
+            self.short_name,
+            self.form_id,
+            self.form_title,
+        ],  self.save_form)
+        version = set()
+        for word in to_check:
+            found = prog.search(word)
+            version.add('none' if not found else found.group(1))
+        if len(version) > 1:
+            m = (u'"{}" has inconsistent version numbers among XLSForm '
+                 u'filename, XML filename, form_id, form_title, entries in '
+                 u'save_form. Versions found: {}.')
+            m = m.format(self.path, u', '.join(version))
+            raise XlsformError(m)

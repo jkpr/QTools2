@@ -25,6 +25,8 @@
 
 import argparse
 
+import constants
+
 
 def command_line_interface():
     prog_desc = ('Convert files from XLSForm to XForm and validate. '
@@ -55,15 +57,39 @@ def command_line_interface():
 
     v2_help = ('Enforce the new style of PMA2020 form conversion where all '
                'directives are stored in the XLSForms.')
-    parser.add_argument('-v', '--v2', action='store_true', help=v2_help)
+    parser.add_argument('-v2', '--version2', action='store_true', help=v2_help)
+
+    ignore_version_help = ('Ignore versioning in filename, form_id, '
+                             'form_title, and save_form. In other words, the '
+                             'default (without this flag) is to ensure '
+                             'version consistency.')
+    parser.add_argument('-i', '--ignore_version', action='store_true',
+                        help=ignore_version_help)
+
+    linking_warn_help = ('Produce warnings for incorrect linking directives. '
+                         'Default is to raise an exception and halt the '
+                         'program')
+    parser.add_argument('-l', '--linking_warn', action='store_true',
+                        help=linking_warn_help)
 
     args = parser.parse_args()
 
     xlsxfiles = [unicode(filename) for filename in args.xlsxfile]
-
     if args.suffix is None:
         suffix = u''
     else:
         suffix = unicode(args.suffix)
+    check_versioning = not args.ignore_version
+    pma = not args.regular
+    strict_linking = not args.linking_warn
 
-    return xlsxfiles, suffix, args.preexisting, args.regular, args.v2
+    kwargs = {
+        constants.SUFFIX: suffix,
+        constants.PREEXISTING: args.preexisting,
+        constants.PMA: pma,
+        constants.V2: args.version2,
+        constants.CHECK_VERSIONING: check_versioning,
+        constants.STRICT_LINKING: strict_linking
+    }
+
+    return xlsxfiles, kwargs

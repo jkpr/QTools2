@@ -58,7 +58,7 @@ import naming_schemes
 import qxmledit
 
 
-class FileChecker():
+class FileChecker:
     """Check files and generate resulting path information
 
     Stores path information of input files and determines what intermediate
@@ -132,8 +132,9 @@ class FileChecker():
             sentence_end += '.'
             msg = '~~~ In "%s" ' + sentence_end
             msg %= self.path
+            msg += (' Do you mean to use Qtools2 v2? Use qtools2.convert '
+                    'with -v2 flag.')
             print msg
-            print '~~~ Do you mean to use Qtools2 v2.0? Use qtools2.convert.'
 
     def basic_file_checks(self):
         if not os.path.isfile(self.path):

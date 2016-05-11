@@ -1,7 +1,10 @@
 v0.2.1, 11 May 2016
- * Evaluation of xpaths supplied through save_instance.
+ * Validation of xpaths supplied through save_instance.
  * Support for external choices and "itemsets.csv"
- * Meet all traditional XML editing requirements (e.g. newline fix)
+ * Meet all traditional XML editing requirements, such as newline fix
+ * Report logging in v2 editing
+ * Ensure naming consistency with respect to versions
+ * Deprecated qxml module (sad to see you go, old friend).
  * First unittests added
 
 v0.2.0, 3 May 2016

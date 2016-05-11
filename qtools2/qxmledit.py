@@ -612,7 +612,7 @@ def edit_all_checkers(file_checkers=None, xlsforms=None):
         if file_checkers is not None:
             xforms = [Xform(file_checker=f) for f in file_checkers]
         elif xlsforms is not None:
-            xforms = [Xform(xlsform=xlsform for xlsform in xlsforms)]
+            xforms = [Xform(xlsform=xlsform) for xlsform in xlsforms]
         else:
             msg = 'Nothing supplied to `edit_all_checkers` method. Cannot edit'
             raise QxmleditError(msg)
@@ -624,9 +624,10 @@ def edit_all_checkers(file_checkers=None, xlsforms=None):
         print m
         print e.message
     finally:
-        for item in file_checkers:
-            if os.path.isfile(item.xml_result):
-                os.remove(item.xml_result)
+        if file_checkers is not None:
+            for item in file_checkers:
+                if os.path.isfile(item.xml_result):
+                    os.remove(item.xml_result)
 
 
 if __name__ == '__main__':

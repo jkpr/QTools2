@@ -51,6 +51,14 @@ xml_codes = naming_schemes.xml_codes
 
 placeholders = naming_schemes.str_to_delete
 
+# Command-line interface keywords
+SUFFIX = u'suffix'
+PREEXISTING = u'preexisting'
+PMA = u'pma'
+V2 = u'v2'
+CHECK_VERSIONING = u'check_versioning'
+STRICT_LINKING = u'strict_linking'
+
 # Must be a dictionary with exactly one key-value pair
 xml_ns = {'h': 'http://www.w3.org/2002/xforms'}
 logging_xpath = './h:meta/h:logging'
