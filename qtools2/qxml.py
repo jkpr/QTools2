@@ -42,7 +42,7 @@ Examples:
 
         $ python -m qtools2.qxml -h
 
-Last modified: 29 April 2016
+Last modified: 11 May 2016
 """
 import argparse
 import shutil
@@ -58,7 +58,7 @@ import naming_schemes
 import qxmledit
 
 
-class FileChecker():
+class FileChecker:
     """Check files and generate resulting path information
 
     Stores path information of input files and determines what intermediate
@@ -132,8 +132,9 @@ class FileChecker():
             sentence_end += '.'
             msg = '~~~ In "%s" ' + sentence_end
             msg %= self.path
+            msg += (' Do you mean to use Qtools2 v2? Use qtools2.convert '
+                    'with -v2 flag.')
             print msg
-            print '~~~ Do you mean to use Qtools2 v2.0? Use qtools2.convert.'
 
     def basic_file_checks(self):
         if not os.path.isfile(self.path):
@@ -282,15 +283,17 @@ def xlsform_offline(source, dest, orig='', final=''):
         m = '### Invalid ODK Xform: "%s"! ###' % final_short
         print m
         print e.message
-        print '### Deleting "%s"' % final_short
         # Remove output file if there is an error with ODKValidate
-        os.remove(dest)
+        if os.path.exists(dest):
+            print '### Deleting "%s"' % final_short
+            os.remove(dest)
         return False
     except Exception as e:
-        print e.message
-        print '### Deleting "%s"' % final_short
+        print repr(e)
         # Remove output file if there is an error with ODKValidate
-        os.remove(dest)
+        if os.path.exists(dest):
+            print '### Deleting "%s"' % final_short
+            os.remove(dest)
         return False
     else:
         return True
@@ -398,6 +401,12 @@ def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
         qxmledit.edit_all_checkers(file_checkers)
 
 
+def warn_deprecated():
+    msg = ('-v~^*^~v- Module qtools2.qxml is now deprecated (as of v0.2.1, '
+           'May 2016). Use qtools2.convert instead -v~^*^~v-')
+    print msg
+
+
 if __name__ == '__main__':
     prog_desc = ('Convert files from XLSForm to XForm and validate. '
                  'This versatile program can accept .xls or .xlsx files as '
@@ -430,6 +439,7 @@ if __name__ == '__main__':
     if args.suffix is None:
         args.suffix = ''
     try:
+        warn_deprecated()
         xlsform_convert(args.xlsxfile, args.suffix, args.preexisting,
                         args.regular)
     except QxmlException:

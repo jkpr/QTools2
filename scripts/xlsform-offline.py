@@ -3,4 +3,4 @@
 from qtools2.qgui import start_gui
 
 # For regular XLSOffline conversion
-start_gui(regular=True, new_version=True)
+start_gui(regular=True, v2=True)

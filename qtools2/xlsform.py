@@ -3,7 +3,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 PMA2020
+# Copyright (c) 2016 PMA2020
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,9 @@
 # SOFTWARE.
 
 import os.path
-import itertools
 import re
+import shutil
+import itertools
 
 import xlrd
 from pmaxform.xls2xform import xls2xform_convert
@@ -34,7 +35,7 @@ import constants
 from errors import XlsformError
 
 
-class Xlsform():
+class Xlsform:
     """Check files and generate resulting path information
 
     Stores path information of input files and determines what intermediate
@@ -50,18 +51,93 @@ class Xlsform():
             self.outpath = self.get_outpath(path, suffix)
         else:
             self.outpath = outpath
-        self.settings = self.get_settings()
+        self.media_dir = self.get_media_dir(self.outpath)
+
+        wb = self.get_workbook()
+        # Survey
+        self.save_instance = self.filter_column(wb, constants.SURVEY,
+                                                constants.SAVE_INSTANCE)[1:]
+        self.save_form = self.filter_column(wb, constants.SURVEY,
+                                            constants.SAVE_FORM)[1:]
+        self.linking_consistency(self.path, self.save_instance, self.save_form)
+        # External choices
+        self.external_choices_consistency(self.path, wb)
+        # Settings
+        self.settings = self.get_settings(wb)
         self.form_id = self.get_form_id(pma)
         self.form_title = self.get_form_title(pma)
         self.xml_root = self.get_xml_root(pma)
 
-    def get_settings(self):
-        values = {}
+    def get_workbook(self):
+        # IO Error if not existing
+        # Perhaps catch xlrd.XLRDError and throw XlsformError?
         wb = xlrd.open_workbook(self.path)
-        settings = wb.sheet_by_name(constants.SETTINGS)
-        for k, v in itertools.izip_longest(settings.row(0), settings.row(1)):
-            if k.value != u'' and v.value != u'':
-                values[k.value] = v.value
+        return wb
+
+    def xlsform_convert(self):
+        msg = xls2xform_convert(self.path, self.outpath)
+        self.assert_itemsets_moved()
+        return msg
+
+    def assert_itemsets_moved(self):
+        base_dir = os.path.split(self.outpath)[0]
+        itemsets = os.path.join(base_dir, constants.ITEMSETS)
+        if os.path.exists(itemsets):
+            if not os.path.exists(self.media_dir):
+                os.mkdir(self.media_dir)
+            new_itemsets = os.path.join(self.media_dir, constants.ITEMSETS)
+            shutil.move(itemsets, new_itemsets)
+
+    def cleanup(self):
+        if os.path.exists(self.outpath):
+            os.remove(self.outpath)
+        if os.path.exists(self.media_dir):
+            shutil.rmtree(self.media_dir)
+
+    @staticmethod
+    def filter_column(wb, sheet, header):
+        found = []
+        try:
+            survey = wb.sheet_by_name(sheet)
+            headers = survey.row_values(0)
+            col = headers.index(header)
+            full_column = survey.col_values(col)
+            found = filter(None, full_column)
+        except (xlrd.XLRDError, IndexError, ValueError):
+            # No survey found, nothing in survey, header not found
+            pass
+        return found
+
+    @staticmethod
+    def find_external_type(wb):
+        found = False
+        type_column = Xlsform.filter_column(wb, constants.SURVEY,
+                                            constants.TYPE)
+        for this_type in type_column:
+            first_word = this_type.split(u' ', 1)[0]
+            if first_word in constants.EXTERNAL_TYPES:
+                found = True
+                break
+        return found
+
+    @staticmethod
+    def find_external_choices(wb):
+        return constants.EXTERNAL_CHOICES in wb.sheet_names()
+
+    @staticmethod
+    def get_settings(wb):
+        values = {}
+        try:
+            settings = wb.sheet_by_name(constants.SETTINGS)
+            for k, v in zip(settings.row(0), settings.row(1)):
+                if k.value != u'' and v.value != u'':
+                    values[k.value] = v.value
+        except xlrd.XLRDError:
+            # No settings found
+            pass
+        except IndexError:
+            # Blank settings found
+            pass
         return values
 
     def get_form_id(self, pma):
@@ -74,6 +150,8 @@ class Xlsform():
                 self.filename_error(self.short_file)
             elif expected_id != form_id:
                 self.bad_filename_and_id(self.short_file, form_id)
+        if form_id == u'':
+            form_id = self.short_name
         return form_id
 
     def get_form_title(self, pma):
@@ -86,6 +164,8 @@ class Xlsform():
                 self.filename_error(self.short_file)
             elif expected_title != form_title:
                 self.bad_filename_and_title(self.short_file, form_title)
+        if form_title == u'':
+            form_title = self.form_id
         return form_title
 
     def get_xml_root(self, pma):
@@ -96,9 +176,6 @@ class Xlsform():
                 self.no_xml_root(self.short_file, expected_xml_root)
         return xml_root
 
-    def xlsform_convert(self):
-        return xls2xform_convert(self.path, self.outpath)
-
     @staticmethod
     def get_outpath(path, suffix):
         short_name, ext = os.path.splitext(path)
@@ -106,6 +183,14 @@ class Xlsform():
             short_name += suffix
         short_name += constants.XML_EXT
         return short_name
+
+    @staticmethod
+    def get_media_dir(xmlpath):
+        base_dir, short_file = os.path.split(xmlpath)
+        short_name = os.path.splitext(short_file)[0]
+        media_dir = short_name + constants.MEDIA_DIR_EXT
+        full_media_dir = os.path.join(base_dir, media_dir)
+        return full_media_dir
 
     @staticmethod
     def get_identifiers(filename):
@@ -122,6 +207,14 @@ class Xlsform():
             country_round, version = name_split[0], name_split[-2]
             country, round = country_round[:2], country_round[3:]
         return qtype, country, round, version
+
+    def get_country_round(self):
+        out = self.get_identifiers(self.short_name)
+        country = out[1]
+        round = out[2]
+        country_round = u'r'.join([country, round])
+        return country_round
+
 
     @staticmethod
     def determine_xml_root(filename):
@@ -165,7 +258,8 @@ class Xlsform():
 
     @staticmethod
     def filename_error(filename):
-        msg = u'"%s" does not match approved PMA naming scheme (approved %s):\n%s'
+        msg = (u'"%s" does not match approved PMA naming scheme '
+               u'(approved %s):\n%s')
         msg %= (filename, constants.approval_date, constants.odk_file_model)
         raise XlsformError(msg)
 
@@ -204,3 +298,51 @@ class Xlsform():
             add_on = u'one of %s' % u', '.join(all_xml_roots)
             msg %= filename, add_on
         raise XlsformError(msg)
+
+    @staticmethod
+    def external_choices_consistency(filename, wb):
+        has_external_type = Xlsform.find_external_type(wb)
+        has_external_choices_sheet = Xlsform.find_external_choices(wb)
+        inconsistent = has_external_type ^ has_external_choices_sheet
+        if inconsistent:
+            if has_external_type:
+                m = (u'"{}" has survey question of type "*_external" but no '
+                     u'"external_choices" sheet')
+            else:
+                m = (u'"{}" has "external_choices" sheet but no survey '
+                     u'question of type "*_external"')
+            raise XlsformError(m.format(filename))
+
+    @staticmethod
+    def linking_consistency(filename, save_instance, save_form):
+        has_save_instance = len(save_instance) > 0
+        has_save_form = len(save_form) > 0
+        inconsistent = has_save_instance ^ has_save_form
+        if inconsistent:
+            if has_save_instance:
+                m = u'"{}" defines save_instance value but no save_form value'
+            else:
+                m = u'"{}" defines save_form value but no save_instance value'
+            raise XlsformError(m.format(filename))
+
+    def version_consistency(self):
+        version_re = ur'[Vv](\d+)'
+        prog = re.compile(version_re)
+        short_outfile = os.path.split(self.outpath)[1]
+        short_outname = os.path.splitext(short_outfile)[0]
+        to_check = itertools.chain([
+            short_outname,
+            self.short_name,
+            self.form_id,
+            self.form_title,
+        ],  self.save_form)
+        version = set()
+        for word in to_check:
+            found = prog.search(word)
+            version.add('none' if not found else found.group(1))
+        if len(version) > 1:
+            m = (u'"{}" has inconsistent version numbers among XLSForm '
+                 u'filename, XML filename, form_id, form_title, entries in '
+                 u'save_form. Versions found: {}.')
+            m = m.format(self.path, u', '.join(version))
+            raise XlsformError(m)
