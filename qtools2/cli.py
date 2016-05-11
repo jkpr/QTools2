@@ -53,6 +53,10 @@ def command_line_interface():
                    'hyphen ("-").')
     parser.add_argument('-s', '--suffix', help=suffix_help)
 
+    v2_help = ('Enforce the new style of PMA2020 form conversion where all '
+               'directives are stored in the XLSForms.')
+    parser.add_argument('-v', '--v2', action='store_true', help=v2_help)
+
     args = parser.parse_args()
 
     xlsxfiles = [unicode(filename) for filename in args.xlsxfile]
@@ -62,4 +66,4 @@ def command_line_interface():
     else:
         suffix = unicode(args.suffix)
 
-    return xlsxfiles, suffix, args.preexisting, args.regular
+    return xlsxfiles, suffix, args.preexisting, args.regular, args.v2

@@ -46,27 +46,32 @@ import qxml
 import naming_schemes
 import insert_after
 from __init__ import __version__ as VERSION
-
-
-class XformError(Exception):
-    pass
+from errors import XformError
+from errors import QxmleditError
 
 
 class Xform():
 
-    def __init__(self, filename=None, file_checker=None):
-        if filename is None:
+    def __init__(self, filename=None, file_checker=None, xlsform=None):
+        if file_checker:
             self.filename = file_checker.xml_result
+        elif xlsform:
+            self.filename = xlsform.outpath
         else:
             self.filename = filename
 
-        if file_checker is None:
-            filechecker = qxml.FileChecker(filename, True, False)
-        else:
-            filechecker = file_checker
-        self.xml_root = filechecker.xml_root
-        self.short_file = filechecker.short_file
-        self.country_round = filechecker.country_round
+        if filename and file_checker is None:
+            file_checker = qxml.FileChecker(filename, True, False)
+
+
+        if file_checker:
+            self.xml_root = file_checker.xml_root
+            self.short_file = file_checker.short_file
+            self.country_round = file_checker.country_round
+        elif xlsform:
+            self.xml_root = xlsform.xml_root
+            self.short_file = xlsform.short_file
+            self.country_round = xlsform.get_country_round()
 
         self.data = []
         self.locations = ()
@@ -74,8 +79,10 @@ class Xform():
         self.has_logging = False
 
         self.write_location = ''
-        if file_checker is not None:
+        if file_checker:
             self.write_location = file_checker.final_xml
+        elif xlsform:
+            self.write_location = xlsform.outpath
 
         with open(self.filename) as f:
             self.data = list(f)
@@ -600,9 +607,15 @@ def edit_all(xmlfiles, overwrite, suffix):
     edit_all_xforms(xforms)
 
 
-def edit_all_checkers(file_checkers):
+def edit_all_checkers(file_checkers=None, xlsforms=None):
     try:
-        xforms = [Xform(file_checker=f) for f in file_checkers]
+        if file_checkers is not None:
+            xforms = [Xform(file_checker=f) for f in file_checkers]
+        elif xlsforms is not None:
+            xforms = [Xform(xlsform=xlsform for xlsform in xlsforms)]
+        else:
+            msg = 'Nothing supplied to `edit_all_checkers` method. Cannot edit'
+            raise QxmleditError(msg)
         xml_file_checks(xforms)
         edit_all_xforms(xforms)
     except XformError as e:

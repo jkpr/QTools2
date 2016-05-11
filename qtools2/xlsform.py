@@ -204,6 +204,14 @@ class Xlsform:
             country, round = country_round[:2], country_round[3:]
         return qtype, country, round, version
 
+    def get_country_round(self):
+        out = self.get_identifiers(self.short_name)
+        country = out[1]
+        round = out[2]
+        country_round = u'r'.join([country, round])
+        return country_round
+
+
     @staticmethod
     def determine_xml_root(filename):
         """Get XML root from filename without extension

@@ -58,13 +58,15 @@ from xlrd import XLRDError
 from cli import command_line_interface
 from xlsform import Xlsform
 from xform import Xform
+import qxmledit
 
 from errors import XlsformError
 from errors import XformError
 from errors import ConvertError
 
 
-def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False):
+def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False,
+                    v2=False):
     pma = not regular
     xlsforms = []
     error = []
@@ -97,12 +99,16 @@ def xlsform_convert(xlsxfiles, suffix=u'', preexisting=False, regular=False):
         if save_form_msg:
             format_and_warn(save_form_msg)
     if error:
-        format_and_raise(error)
+        header = u'The following {} error(s) prevent qtools2 from continuing'
+        header = header.format(len(error))
+        format_and_raise(header, error)
     successes = [xlsform_offline(xlsform) for xlsform in xlsforms]
     report_conversion_success(successes, xlsforms)
     all_wins = all(successes)
-    if all_wins:
+    if all_wins and v2:
         xform_edit_and_check(xlsforms)
+    elif all_wins and not v2:
+        qxmledit.edit_all_checkers(xlsforms=xlsforms)
     else:
         m = (u'*** Removing all generated files because not all conversions '
              u'were successful')
@@ -215,20 +221,33 @@ def check_save_form_match(xlsforms):
                 msg.append(m)
     return msg
 
+
 def xform_edit_and_check(xlsforms):
     xforms = [Xform(xlsform) for xlsform in xlsforms]
     for xform in xforms:
         xform.make_edits()
         xform.overwrite()
     report_logging(xforms)
-    warnings = validate_xpaths(xlsforms, xforms)
-    if warnings:
-        header = u'*** Warnings from qtools2 xform editing'
-        body = format_lines(warnings)
-        print header
-        print body
-    # TODO much later: delete forms if there are warnings
-    # TODO sooner: print out message that all forms were edited properly
+    error_report = validate_xpaths(xlsforms, xforms)
+    if error_report:
+        for xlsform in xlsforms:
+            xlsform.cleanup()
+        header = (u'Generated files deleted! Please address {} error(s) from '
+                  u'qtools2 xform editing')
+        header = header.format(len(error_report))
+        format_and_raise(header, error_report)
+    report_edit_success(xlsforms)
+
+
+def report_edit_success(xlsforms):
+    n_forms = len(xlsforms)
+    record = u'({}/{})'.format(n_forms, n_forms)
+    msg = u' XML EDITING SUCCESSES {} '.format(record)
+    m = msg.center(50, '=')
+    print u''
+    print m
+    for xlsform in xlsforms:
+        print u' -- {}' + xlsform.outpath
 
 
 def validate_xpaths(xlsforms, xforms):
@@ -284,7 +303,6 @@ def report_logging(xforms):
             print u' -- %s' % xform.filename
 
 
-
 def get_overwrite_errors(xlsforms):
     conflicts = [x.outpath for x in xlsforms if os.path.exists(x.outpath)]
     template = u'"{}" already exists! Overwrite not permitted by user.'
@@ -298,8 +316,8 @@ def format_and_warn(messages):
     print body
 
 
-def format_and_raise(messages):
-    header = u'### The following %d error(s) prevent qtools2 from continuing'
+def format_and_raise(headline, messages):
+    header = u'### {}'.format(headline)
     header %= len(messages)
     body = format_lines(messages)
     text = u'\n'.join([header, body])
@@ -328,8 +346,8 @@ def hq_fq_mismatch(filename):
 
 
 if __name__ == '__main__':
-    xlsxfiles, suffix, preexisting, regular = command_line_interface()
+    xlsxfiles, suffix, preexisting, regular, v2 = command_line_interface()
     try:
-        xlsform_convert(xlsxfiles, suffix, preexisting, regular)
+        xlsform_convert(xlsxfiles, suffix, preexisting, regular, v2)
     except ConvertError as e:
         print str(e)

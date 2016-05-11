@@ -31,3 +31,7 @@ class ConvertError(Exception):
 
 class XformError(Exception):
     pass
+
+
+class QxmleditError(Exception):
+    pass

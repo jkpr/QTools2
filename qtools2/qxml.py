@@ -42,7 +42,7 @@ Examples:
 
         $ python -m qtools2.qxml -h
 
-Last modified: 3 May 2016
+Last modified: 11 May 2016
 """
 import argparse
 import shutil
@@ -400,6 +400,12 @@ def xlsform_convert(file_list, suffix='', preexisting=False, regular=False):
         qxmledit.edit_all_checkers(file_checkers)
 
 
+def warn_deprecated():
+    msg = ('-v~^*^~v- Use of qtools2.qxml is now deprecated (as of v0.2.1, '
+           'May 2016). Use qtools2.convert instead -v~^*^~v-')
+    print msg
+
+
 if __name__ == '__main__':
     prog_desc = ('Convert files from XLSForm to XForm and validate. '
                  'This versatile program can accept .xls or .xlsx files as '
@@ -432,6 +438,7 @@ if __name__ == '__main__':
     if args.suffix is None:
         args.suffix = ''
     try:
+        warn_deprecated()
         xlsform_convert(args.xlsxfile, args.suffix, args.preexisting,
                         args.regular)
     except QxmlException:
