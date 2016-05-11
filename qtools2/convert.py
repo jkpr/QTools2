@@ -141,9 +141,6 @@ def xlsform_offline(xlsform):
         m %= xlsform.path
         print m
         print str(e)
-        footer = u'  End PyXForm for "%s"  '
-        footer %= xlsform.path
-        print footer.center(len(m), u'#') + u'\n'
         xlsform.cleanup()
         return False
     except ODKValidateError as e:
