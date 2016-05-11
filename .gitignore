@@ -9,3 +9,4 @@ qtools2/.idea
 .idea
 qtools2/test/confidential
 .cache
+qtools2/test/config/

@@ -55,8 +55,10 @@ class Xlsform:
 
         wb = self.get_workbook()
         # Survey
-        self.save_instance = self.filter_column(wb, constants.SAVE_INSTANCE)[1:]
-        self.save_form = self.filter_column(wb, constants.SAVE_FORM)[1:]
+        self.save_instance = self.filter_column(wb, constants.SURVEY,
+                                                constants.SAVE_INSTANCE)[1:]
+        self.save_form = self.filter_column(wb, constants.SURVEY,
+                                            constants.SAVE_FORM)[1:]
         self.linking_consistency(self.path, self.save_instance, self.save_form)
         # External choices
         self.external_choices_consistency(self.path, wb)
@@ -93,10 +95,10 @@ class Xlsform:
             shutil.rmtree(self.media_dir)
 
     @staticmethod
-    def filter_column(wb, header):
+    def filter_column(wb, sheet, header):
         found = []
         try:
-            survey = wb.sheet_by_name(constants.SURVEY)
+            survey = wb.sheet_by_name(sheet)
             headers = survey.row_values(0)
             col = headers.index(header)
             full_column = survey.col_values(col)
@@ -109,9 +111,10 @@ class Xlsform:
     @staticmethod
     def find_external_type(wb):
         found = False
-        type_column = Xlsform.filter_column(wb, constants.TYPE)
+        type_column = Xlsform.filter_column(wb, constants.SURVEY,
+                                            constants.TYPE)
         for this_type in type_column:
-            first_word = this_type.split(u' ', 1)
+            first_word = this_type.split(u' ', 1)[0]
             if first_word in constants.EXTERNAL_TYPES:
                 found = True
                 break
@@ -303,11 +306,11 @@ class Xlsform:
         inconsistent = has_external_type ^ has_external_choices_sheet
         if inconsistent:
             if has_external_type:
-                m = (u'"{}" has survey question of type "external" but no '
-                     u'external choices sheet')
+                m = (u'"{}" has survey question of type "*_external" but no '
+                     u'"external_choices" sheet')
             else:
-                m = (u'"{}" has external choices sheet but no survey question '
-                     u'of type "external"')
+                m = (u'"{}" has "external_choices" sheet but no survey '
+                     u'question of type "*_external"')
             raise XlsformError(m.format(filename))
 
     @staticmethod

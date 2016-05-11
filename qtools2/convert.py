@@ -105,7 +105,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
         except XlsformError as e:
             error.append(str(e))
     if error:
-        header = u'The following {} error(s) prevent qtools2 from continuing'
+        header = u'The following {} error(s) prevent qtools2 from converting'
         header = header.format(len(error))
         format_and_raise(header, error)
     successes = [xlsform_offline(xlsform) for xlsform in xlsforms]
@@ -141,6 +141,10 @@ def xlsform_offline(xlsform):
         m %= xlsform.path
         print m
         print str(e)
+        footer = u'  End PyXForm for "%s"  '
+        footer %= xlsform.path
+        print footer.center(len(m), u'#') + u'\n'
+        xlsform.cleanup()
         return False
     except ODKValidateError as e:
         m = u'### Invalid ODK Xform: "%s"! ###'
@@ -185,8 +189,10 @@ def xform_edit_and_check(xlsforms, strict_linking):
 
 
 def validate_xpaths(xlsforms, xforms):
-    warnings = []
+    findings = []
     form_ids = [xform.form_id for xform in xforms]
+
+    slash_flag = False
     for xlsform in xlsforms:
         try:
             this_save_instance = xlsform.save_instance
@@ -210,10 +216,15 @@ def validate_xpaths(xlsforms, xforms):
             for item in to_report:
                 m = u'From "{}", unable to find "{}" in designated child XForm'
                 m = m.format(xlsform.path, item)
-                warnings.append(m)
+                findings.append(m)
+                if not item.startswith(u'/') or item.endswith(u'/'):
+                    slash_flag = True
         except XformError as e:
-            warnings.append(str(e))
-    return warnings
+            findings.append(str(e))
+    if slash_flag:
+        m = u'Note: linked xpaths must start with "/" and must not end with "/". Check "nodeset" attribute of <bind> for examples.'
+        findings.append(m)
+    return findings
 
 
 def remove_all_successes(successes, xlsforms):

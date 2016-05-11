@@ -16,6 +16,7 @@ v0.2.0, 3 May 2016
  * Updated gui method for more use cases
  * Added python scripts to capture all basic usage in scripts folder.
  * Managing version in __init__.py file instead of setup.py.
+ * Inject qtools2 version into XML as a comment
 
 v0.1.5, 14 March 2016
  * Caught a bug in the new FQ age XML editing. Fixed it.

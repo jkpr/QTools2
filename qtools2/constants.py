@@ -27,7 +27,7 @@ XML_EXT = u'.xml'
 SURVEY = u'survey'
 CHOICES = u'choices'
 SETTINGS = u'settings'
-EXTERNAL_CHOICES = u'external choices'
+EXTERNAL_CHOICES = u'external_choices'
 EXTERNAL_TYPES = [u'select_one_external', u'select_multiple_external']
 
 SAVE_INSTANCE = u'save_instance'
