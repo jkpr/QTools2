@@ -113,9 +113,9 @@ def xlsform_convert(xlsxfiles, **kwargs):
     all_wins = all(successes)
     if all_wins and v2:
         xform_edit_and_check(xlsforms, strict_linking)
-    elif all_wins and not v2:
+    elif all_wins and not v2 and pma:
         qxmledit.edit_all_checkers(xlsforms=xlsforms)
-    else:
+    elif not all_wins:
         m = (u'*** Removing all generated files because not all conversions '
              u'were successful')
         print m
