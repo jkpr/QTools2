@@ -68,36 +68,36 @@ class Xform:
         with open(self.filename, 'w') as f:
             f.writelines(self.data)
 
+    def get_xml_root(self):
+        xml_text = ''.join(self.data)
+        xml_root = ElementTree.fromstring(xml_text)
+        return xml_root
+
     def get_instance_xml(self):
         xml_text = ''.join(self.data)
         root = ElementTree.fromstring(xml_text)
         query = ".//*[@id='{}']".format(self.form_id)
         instance_xml = root.find(query)
         if instance_xml is None:
-            m = 'Unable to locate XML instance in "{}".'.format(self.filename)
-            m += ' Please confirm instance ID in settings tab.'
+            m = u'Unable to locate XML instance in "{}".'.format(self.filename)
+            m += u' Please confirm instance ID in settings tab.'
             raise XformError(m)
         return instance_xml
 
     def discover_all(self, xpaths):
         outcomes = []
+        msg = []
+        xml_root = self.get_xml_root()
         instance = self.get_instance_xml()
         for xpath in xpaths:
             discovered = self.discover_xpath(xpath, instance)
             outcomes.append(discovered)
-        return outcomes
-
-    def discover_xpath(self, xpath, instance):
-        result = False
-        try:
-            full_root, full_xpath = self.convert_xpath(xpath)
-            found = instance.find(full_xpath, constants.xml_ns)
-            roots_match = full_root == instance.tag
-            result = found is not None and roots_match
-        except (IndexError, SyntaxError):
-            # Unable to split properly, bad xpath syntax
-            pass
-        return result
+            if discovered:
+                try:
+                    self.check_no_calculate(xpath, xml_root)
+                except XformError as e:
+                    msg.append(str(e))
+        return outcomes, msg
 
     def has_logging(self):
         ns_key = constants.xml_ns.keys()[0]
@@ -105,6 +105,35 @@ class Xform:
         instance = self.get_instance_xml()
         found = instance.find(logging_xpath, constants.xml_ns)
         return found is not None
+
+    def check_no_calculate(self, xpath, xml_root):
+        ns_key = constants.xml_ns.keys()[0]
+        query = ".//{}:bind[@nodeset='{}']".format(ns_key, xpath)
+        this_bind = xml_root.find(query, constants.xml_ns)
+        if this_bind is not None:
+            has_calculate = 'calculate' in this_bind.attrib
+            if has_calculate:
+                m = u'In form_id "{}", xpath "{}" also defines a calculation.'
+                m = m.format(self.form_id, xpath)
+                raise XformError(m)
+        else:
+            # should never happen
+            m = u'In form_id "{}", valid xpath "{}" has no associated <bind>'
+            m = m.format(self.form_id, xpath)
+            raise XformError(m)
+
+    @staticmethod
+    def discover_xpath(xpath, instance):
+        result = False
+        try:
+            full_root, full_xpath = Xform.convert_xpath(xpath)
+            found = instance.find(full_xpath, constants.xml_ns)
+            roots_match = full_root == instance.tag
+            result = found is not None and roots_match
+        except (IndexError, SyntaxError):
+            # Unable to split properly, bad xpath syntax
+            pass
+        return result
 
     @staticmethod
     def convert_xpath(xpath):
