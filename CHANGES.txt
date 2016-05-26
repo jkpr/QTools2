@@ -1,5 +1,5 @@
-v0.2.1, 11 May 2016
- * Validation of xpaths supplied through save_instance.
+v0.2.1, 26 May 2016
+ * Validation of xpaths supplied through save_instance. Checks against "calculation" in bind
  * Support for external choices and "itemsets.csv"
  * Meet all traditional XML editing requirements, such as newline fix
  * Report logging in v2 editing
@@ -9,8 +9,7 @@ v0.2.1, 11 May 2016
 
 v0.2.0, 3 May 2016
  * New release with many updates.
- * Support for pmaxform. This brings xml_root, save_instance, save_form, and
-   delete_form with it.
+ * Support for pmaxform. This brings xml_root, save_instance, save_form, and delete_form with it.
  * Removed sys.exit() calls. Replaced with raising an exception.
  * Allow multiple versions at once.
  * Updated gui method for more use cases
@@ -34,14 +33,12 @@ v0.1.3, 26 January 2016
 
 v0.1.2, 10 November 2015
  * Added partial GUI functionality
- * Rewrote the command line usage so that the default is to edit without a
-   suffix and to overwrite pre-existing files.
+ * Rewrote the command line usage so that the default is to edit without a suffix and to overwrite pre-existing files.
  * Changed max search location depth to 20 lines.
  * Changed internal mechanics to be friendlier with Windows.
 
 v0.1.1, 17 August 2015
- * Edited XML no longer needs to have a suffix. Default is no suffix (edit 
-   in place).
+ * Edited XML no longer needs to have a suffix. Default is no suffix (edit in place).
  * Supports <instanceName/> definitions from XLSForm.
 
 v0.1.0, 12 June 2015 -- Initial release. 
