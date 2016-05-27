@@ -48,21 +48,22 @@ def command_line_interface():
                         help=overwrite_help)
 
     reg_help = ('This flag indicates the program should convert to XForm and '
-                'not try to make PMA2020-specific edits')
+                'not try to make PMA2020-specific edits. To simply convert to '
+                'XML and nothing more, use this flag without the -v2 flag.')
     parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
 
     suffix_help = ('A suffix to add to the base file name. Cannot start with a '
                    'hyphen ("-").')
     parser.add_argument('-s', '--suffix', help=suffix_help)
 
-    v2_help = ('Enforce the new style of PMA2020 form conversion where all '
+    v2_help = ('Enforce the new style of form conversion where all '
                'directives are stored in the XLSForms.')
     parser.add_argument('-v2', '--version2', action='store_true', help=v2_help)
 
     ignore_version_help = ('Ignore versioning in filename, form_id, '
-                             'form_title, and save_form. In other words, the '
-                             'default (without this flag) is to ensure '
-                             'version consistency.')
+                           'form_title, and save_form. In other words, the '
+                           'default (without this flag) is to ensure '
+                           'version consistency.')
     parser.add_argument('-i', '--ignore_version', action='store_true',
                         help=ignore_version_help)
 

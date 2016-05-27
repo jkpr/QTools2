@@ -45,7 +45,7 @@ Examples:
         $ python -m qtools2.convert -h
 
 Created: 27 April 2016
-Last modified: 11 May 2016
+Last modified: 26 May 2016
 """
 
 import os
@@ -113,9 +113,9 @@ def xlsform_convert(xlsxfiles, **kwargs):
     all_wins = all(successes)
     if all_wins and v2:
         xform_edit_and_check(xlsforms, strict_linking)
-    elif all_wins and not v2:
+    elif all_wins and not v2 and pma:
         qxmledit.edit_all_checkers(xlsforms=xlsforms)
-    else:
+    elif not all_wins:
         m = (u'*** Removing all generated files because not all conversions '
              u'were successful')
         print m
@@ -172,9 +172,9 @@ def xform_edit_and_check(xlsforms, strict_linking):
     report_logging(xforms)
     linking_report = validate_xpaths(xlsforms, xforms)
     if linking_report:
-        for xlsform in xlsforms:
-            xlsform.cleanup()
         if strict_linking:
+            for xlsform in xlsforms:
+                xlsform.cleanup()
             header = (u'Generated files deleted! Please address {} error(s) '
                       u'from qtools2 xform editing')
             header = header.format(len(linking_report))
@@ -199,8 +199,10 @@ def validate_xpaths(xlsforms, xforms):
                 try:
                     ind = form_ids.index(save_form)
                     match = xforms[ind]
-                    found = match.discover_all(this_save_instance)
+                    found, msg = match.discover_all(this_save_instance)
                     not_found = [a and not b for a, b in zip(not_found, found)]
+                    if msg:
+                        findings.extend(msg)
                 except ValueError:
                     # Form id could match a different form
                     no_form_id_match[i] = True
@@ -219,7 +221,8 @@ def validate_xpaths(xlsforms, xforms):
         except XformError as e:
             findings.append(str(e))
     if slash_flag:
-        m = u'Note: linked xpaths must start with "/" and must not end with "/". Check "nodeset" attribute of <bind> for examples.'
+        m = (u'Note: linked xpaths must start with "/" and must not end with '
+             u'"/". Check "nodeset" attribute of <bind> for examples.')
         findings.append(m)
     return findings
 
