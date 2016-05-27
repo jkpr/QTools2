@@ -24,6 +24,7 @@ import unittest
 import os.path
 
 from qtools2.xform import Xform
+from qtools2.errors import XformError
 
 
 class XformTest(unittest.TestCase):
@@ -37,7 +38,8 @@ class XformTest(unittest.TestCase):
     form_ids = {
         u'child_form.xml': u'child_form_id',
         u'spacing-test-logging.xml': u'spacing-test-logging',
-        u'spacing-test.xml': u'spacing-test'
+        u'spacing-test.xml': u'spacing-test',
+        u'KEShort-HQ.xml': u'HQ-kes-v2'
     }
 
     def test_has_logging(self):
@@ -84,7 +86,7 @@ class XformTest(unittest.TestCase):
             for xpath in these_xpaths:
                 msg = u'Working with xpath "{}"'.format(xpath)
                 this_test = [xpath]
-                result = this_xform.discover_all(this_test)
+                result = this_xform.discover_all(this_test)[0]
                 self.assertEqual(len(result), 1, msg=msg)
                 self.assertTrue(result[0] is True, msg=msg)
 
@@ -111,9 +113,68 @@ class XformTest(unittest.TestCase):
             for xpath in these_xpaths:
                 msg = u'Working with xpath "{}"'.format(xpath)
                 this_test = [xpath]
-                result = this_xform.discover_all(this_test)
+                result = this_xform.discover_all(this_test)[0]
                 self.assertEqual(len(result), 1, msg=msg)
                 self.assertTrue(result[0] is False, msg=msg)
+
+    def test_has_calculate_bind(self):
+        no_calculate = {
+            u'KEShort-HQ.xml': [
+                u'/HHQ/name_typed',
+                u'/HHQ/county',
+                u'/HHQ/respondent_firstname',
+                u'/HHQ/HH_member/more_hh_members',
+                u'/HHQ/photo_permission'
+            ]
+        }
+        yes_calculate = {
+            u'KEShort-HQ.xml': [
+                u'/HHQ/your_name',
+                u'/HHQ/consent_obtained',
+                u'/HHQ/HH_member/member_bckgrnd/eligible',
+                u'/HHQ/names',
+                u'/HHQ/source_labels'
+            ]
+        }
+        for f in no_calculate:
+            path = os.path.join(self.FORM_DIR, f)
+            this_xform = Xform(filename=path, form_id=self.form_ids[f])
+            these_xpaths = no_calculate[f]
+            xml_root = this_xform.get_xml_root()
+            for xpath in these_xpaths:
+                this_xform.check_no_calculate(xpath, xml_root)
+
+        for f in yes_calculate:
+            path = os.path.join(self.FORM_DIR, f)
+            this_xform = Xform(filename=path, form_id=self.form_ids[f])
+            these_xpaths = yes_calculate[f]
+            xml_root = this_xform.get_xml_root()
+            for xpath in these_xpaths:
+                self.assertRaises(XformError, this_xform.check_no_calculate,
+                                  xpath, xml_root)
+
+    def test_has_no_bind(self):
+        no_bind = {
+            u'KEShort-HQ.xml': [
+                u'',
+                u'/hhq/division',
+                u'/HHQ/division/',
+                u'',
+                u'/',
+                u'/HHQ',
+                u'/HHQ/test1',
+                u'/HHQ/test1 ',
+                u' /HHQ/test1'
+            ]
+        }
+        for f in no_bind:
+            path = os.path.join(self.FORM_DIR, f)
+            this_xform = Xform(filename=path, form_id=self.form_ids[f])
+            these_xpaths = no_bind[f]
+            xml_root = this_xform.get_xml_root()
+            for xpath in these_xpaths:
+                self.assertRaises(XformError, this_xform.check_no_calculate,
+                                  xpath, xml_root)
 
 
 if __name__ == '__main__':

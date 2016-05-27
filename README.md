@@ -15,17 +15,26 @@ Besides being the workhorse of `qtools2`, the module `qtools2.convert` also prov
 python -m qtools2.convert --help
 ```
 
+#### Quick-start guide
+
+| Type of conversion | Command |
+| ------------------ | ------- |
+| PMA conversion for older forms (May 2016 and earlier) | `python -m qtools2.qxml FILENAMES` OR `python -m qtools2.convert FILENAMES`           |
+| PMA conversion for newer forms (post-May 2016)        | `python -m qtools2.convert -v2 FILENAMES`    |
+| Conversion of forms with some checks                  | `python -m qtools2.convert -r -v2 FILENAMES` |
+| XLSForm-Offline equivalent, convert and nothing else  | `python -m qtools2.convert -ril FILENAMES`     |
+
 Note: as of v0.2.1, May 2016, the `qtools2.qxml` module has been deprecated.
 
 ## Point-and-click usage
 
 If the (Windows) user wishes to double-click an icon, use an appropriate file from the `scripts` folder of this project.
 
-| Script name | Purpose |
-| ----------- | ------- |
-| `pma-convert-old.py` | Convert one or several of the **six PMA2020 core forms** using the old style of manual line-by-line editing. Most likely needed for forms produced before May 2016. |
-| `pma-convert-v2.py`  | Convert one or several of the **six PMA2020 core forms** using the new style of listing instructions inside the XLSForm. |
-| `xlsform-offline.py` | Convert one or several of *any* kind of XLSForm. Mimics a standard ODK converter. |
+|      Script name      | Purpose |
+| --------------------- | ------- |
+| `pma-convert-old.py`  | Convert one or several of the **six PMA2020 core forms** using the old style of manual line-by-line editing. Most likely needed for forms produced before May 2016. |
+| `pma-convert-v2.py`   | Convert one or several of the **six PMA2020 core forms** using the new style of listing instructions inside the XLSForm. |
+| `xlsform-offline.py`  | Convert one or several of *any* kind of XLSForm. Mimics a standard ODK converter. |
 
 For those who wish to use a GUI initiated from the command line., the QTools2 pipeline begins thusly
 
