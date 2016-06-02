@@ -74,6 +74,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
     v2 = kwargs.get(constants.V2, False)
     check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
     strict_linking = kwargs.get(constants.STRICT_LINKING, True)
+    validate = kwargs.get(constants.VALIDATE, True)
 
     xlsforms = []
     error = []
@@ -108,7 +109,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
         header = u'The following {} error(s) prevent qtools2 from converting'
         header = header.format(len(error))
         format_and_raise(header, error)
-    successes = [xlsform_offline(xlsform) for xlsform in xlsforms]
+    successes = [xlsform_offline(xlsform, validate) for xlsform in xlsforms]
     report_conversion_success(successes, xlsforms)
     all_wins = all(successes)
     if all_wins and v2:
@@ -122,9 +123,9 @@ def xlsform_convert(xlsxfiles, **kwargs):
         remove_all_successes(successes, xlsforms)
 
 
-def xlsform_offline(xlsform):
+def xlsform_offline(xlsform, validate=True):
     try:
-        warnings = xlsform.xlsform_convert()
+        warnings = xlsform.xlsform_convert(validate=validate)
         if warnings:
             m = u'### PyXForm warnings converting "%s" to XML! ###'
             m %= xlsform.path
@@ -240,7 +241,7 @@ def report_conversion_success(successes, xlsforms):
     width = 50
     if n_successes > 0:
         record = u'/'.join([str(n_successes), str(n_attempts)])
-        statement = u' XML Creation Successes (' + record + u') '
+        statement = u' XML creation successes (' + record + u') '
         header = statement.center(width, u'=')
         print header
         for s, xlsform in zip(successes, xlsforms):
@@ -248,7 +249,7 @@ def report_conversion_success(successes, xlsforms):
                 print u' -- ' + xlsform.outpath
     if n_failures > 0:
         record = u'/'.join([str(n_failures), str(n_attempts)])
-        statement = u' XML Creation Failures (' + record + u') '
+        statement = u' XML creation failures (' + record + u') '
         header = statement.center(width, u'=')
         print header
         for s, xlsform in zip(successes, xlsforms):
@@ -262,7 +263,7 @@ def report_logging(xforms):
     has = [xform for xform in xforms if xform.has_logging()]
     has_not = [xform for xform in xforms if not xform.has_logging()]
     if has:
-        m = u' FORMS WITH LOGGING (%d/%d) '
+        m = u' Forms with logging (%d/%d) '
         m %= (len(has), len(xforms))
         msg = m.center(50, u'=')
         print msg
@@ -270,7 +271,7 @@ def report_logging(xforms):
             print u' -- %s' % xform.filename
         print
     if has_not:
-        m = u' FORMS W/O LOGGING (%d/%d) '
+        m = u' Forms w/o logging (%d/%d) '
         m %= (len(has_not), len(xforms))
         msg = m.center(50, u'=')
         print msg
@@ -282,7 +283,7 @@ def report_logging(xforms):
 def report_edit_success(xlsforms):
     n_forms = len(xlsforms)
     record = u'({}/{})'.format(n_forms, n_forms)
-    msg = u' XML EDITING SUCCESSES {} '.format(record)
+    msg = u' XML editing successes {} '.format(record)
     m = msg.center(50, u'=')
     print m
     for xlsform in xlsforms:
