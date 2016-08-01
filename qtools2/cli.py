@@ -77,6 +77,9 @@ def command_line_interface():
     parser.add_argument('-l', '--linking_warn', action='store_true',
                         help=linking_warn_help)
 
+    debug_help = ('Show debug information. Helpful for squashing bugs.')
+    parser.add_argument('-d', '--debug', action='store_true', help=debug_help)
+
     args = parser.parse_args()
 
     xlsxfiles = [unicode(filename) for filename in args.xlsxfile]
@@ -96,7 +99,8 @@ def command_line_interface():
         constants.V2: args.version2,
         constants.CHECK_VERSIONING: check_versioning,
         constants.STRICT_LINKING: strict_linking,
-        constants.VALIDATE: validate
+        constants.VALIDATE: validate,
+        constants.DEBUG: args.debug
     }
 
     return xlsxfiles, kwargs

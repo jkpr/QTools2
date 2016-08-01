@@ -59,6 +59,7 @@ V2 = u'v2'
 CHECK_VERSIONING = u'check_versioning'
 STRICT_LINKING = u'strict_linking'
 VALIDATE = u'validate'
+DEBUG = u'debug'
 
 # Must be a dictionary with exactly one key-value pair
 xml_ns = {'h': 'http://www.w3.org/2002/xforms'}

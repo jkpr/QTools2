@@ -75,6 +75,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
     check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
     strict_linking = kwargs.get(constants.STRICT_LINKING, True)
     validate = kwargs.get(constants.VALIDATE, True)
+    debug = kwargs.get(constants.DEBUG, False)
 
     xlsforms = []
     error = []
@@ -148,7 +149,8 @@ def xlsform_offline(xlsform, validate=True):
         m = u'### Invalid ODK Xform: "%s"! ###'
         m %= xlsform.outpath
         print m
-        print str(e)
+        # This error may contain unicode characters
+        print unicode(e)
         # Remove output file if there is an error with ODKValidate
         if os.path.exists(xlsform.outpath):
             print u'### Deleting "%s"' % xlsform.outpath
@@ -373,4 +375,4 @@ if __name__ == '__main__':
     try:
         xlsform_convert(xlsxfiles, **kwargs)
     except ConvertError as e:
-        print str(e)
+        print unicode(e)
