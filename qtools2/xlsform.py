@@ -74,8 +74,8 @@ class Xlsform:
         wb = xlrd.open_workbook(self.path)
         return wb
 
-    def xlsform_convert(self):
-        msg = xls2xform_convert(self.path, self.outpath)
+    def xlsform_convert(self, validate=True):
+        msg = xls2xform_convert(self.path, self.outpath, validate=validate)
         self.assert_itemsets_moved()
         return msg
 

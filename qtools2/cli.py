@@ -52,6 +52,10 @@ def command_line_interface():
                 'XML and nothing more, use this flag without the -v2 flag.')
     parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
 
+    noval_help = 'Do not validate XML output with ODK Validate.'
+    parser.add_argument('-n', '--novalidate', action='store_true',
+                        help=noval_help)
+
     suffix_help = ('A suffix to add to the base file name. Cannot start with a '
                    'hyphen ("-").')
     parser.add_argument('-s', '--suffix', help=suffix_help)
@@ -73,6 +77,9 @@ def command_line_interface():
     parser.add_argument('-l', '--linking_warn', action='store_true',
                         help=linking_warn_help)
 
+    debug_help = ('Show debug information. Helpful for squashing bugs.')
+    parser.add_argument('-d', '--debug', action='store_true', help=debug_help)
+
     args = parser.parse_args()
 
     xlsxfiles = [unicode(filename) for filename in args.xlsxfile]
@@ -83,6 +90,7 @@ def command_line_interface():
     check_versioning = not args.ignore_version
     pma = not args.regular
     strict_linking = not args.linking_warn
+    validate = not args.novalidate
 
     kwargs = {
         constants.SUFFIX: suffix,
@@ -90,7 +98,9 @@ def command_line_interface():
         constants.PMA: pma,
         constants.V2: args.version2,
         constants.CHECK_VERSIONING: check_versioning,
-        constants.STRICT_LINKING: strict_linking
+        constants.STRICT_LINKING: strict_linking,
+        constants.VALIDATE: validate,
+        constants.DEBUG: args.debug
     }
 
     return xlsxfiles, kwargs

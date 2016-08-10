@@ -37,6 +37,7 @@ Last edited: 11 May 2016
 import os
 
 import convert
+import qxml
 import constants
 from errors import ConvertError
 
@@ -54,11 +55,14 @@ def start_gui(keep_alive=True, regular=False, v2=False):
             m %= type(filenames)
             raise TypeError(m)
         filenames = [unicode(f) for f in filenames]
-        kwargs = {
-            constants.PMA: not regular,
-            constants.V2: v2
-        }
-        convert.xlsform_convert(filenames, **kwargs)
+        if v2:
+            kwargs = {
+                constants.PMA: not regular,
+                constants.V2: v2
+            }
+            convert.xlsform_convert(filenames, **kwargs)
+        else:
+            qxml.xlsform_convert(filenames, regular=regular)
     except (TypeError, NameError):
         print 'No files picked.'
     except ConvertError as e:
