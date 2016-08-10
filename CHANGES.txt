@@ -1,3 +1,7 @@
+v0.2.2, 10 August 2016
+ * Better error messages from ODK Validate
+ * Fixed scripts (GUI)
+
 v0.2.1, 26 May 2016
  * Validation of xpaths supplied through save_instance. Checks against "calculation" in bind
  * Support for external choices and "itemsets.csv"
