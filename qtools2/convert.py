@@ -45,7 +45,7 @@ Examples:
         $ python -m qtools2.convert -h
 
 Created: 27 April 2016
-Last modified: 26 May 2016
+Last modified: 23 August 2016
 """
 
 import os
@@ -376,3 +376,7 @@ if __name__ == '__main__':
         xlsform_convert(xlsxfiles, **kwargs)
     except ConvertError as e:
         print unicode(e)
+    except OSError as e:
+        # Should catch WindowsError, impossible to test on Mac
+        traceback.print_exc()
+        print e
