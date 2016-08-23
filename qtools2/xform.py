@@ -115,7 +115,8 @@ class Xform:
         if this_bind is not None:
             has_calculate = 'calculate' in this_bind.attrib
             if has_calculate:
-                m = u'In form_id "{}", xpath "{}" also defines a calculation.'
+                m = (u'In form_id "{}", linked xpath "{}" also defines a '
+                     u'calculation.')
                 m = m.format(self.form_id, xpath)
                 raise XformError(m)
         else:
@@ -125,18 +126,29 @@ class Xform:
             raise XformError(m)
 
     def check_bind_relevant(self, xpath, xml_root):
-        this_bind = self.xpath_query(xpath, xml_root)
-        if this_bind is not None:
-            has_relevant = 'relevant' in this_bind.attrib
-            if has_relevant:
-                m = u'In form_id "{}", xpath "{}" also defines a relevant.'
+        # Must check ancestors (containing groups)
+        xpath_split = xpath.split("/")
+        for i in (j+1 for j in range(2, len(xpath_split))):
+            xpath_to_check = "/".join(xpath_split[:i])
+            this_bind = self.xpath_query(xpath_to_check, xml_root)
+            if this_bind is not None:
+                has_relevant = 'relevant' in this_bind.attrib
+                if has_relevant and xpath_to_check == xpath:
+                    m = (u'In form_id "{}", linked xpath "{}" also defines a '
+                         u'relevant.')
+                    m = m.format(self.form_id, xpath)
+                    raise XformError(m)
+                elif has_relevant:  # and xpath_to_check != xpath:
+                    m = (u'In form_id "{}", ancestor xpath "{}" of linked '
+                         u'xpath "{}" also defines a relevant.')
+                    m = m.format(self.form_id, xpath_to_check, xpath)
+                    raise XformError(m)
+            elif xpath_to_check == xpath:  # and this_bind is None:
+                # should never happen
+                m = (u'In form_id "{}", valid xpath "{}" has no associated '
+                     u'<bind>')
                 m = m.format(self.form_id, xpath)
                 raise XformError(m)
-        else:
-            # should never happen
-            m = u'In form_id "{}", valid xpath "{}" has no associated <bind>'
-            m = m.format(self.form_id, xpath)
-            raise XformError(m)
 
     @staticmethod
     def xpath_query(xpath, xml_root):

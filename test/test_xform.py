@@ -158,8 +158,8 @@ class XformTest(unittest.TestCase):
             u'KEShort-HQ.xml': [
                 u'/HHQ/your_name',
                 u'/HHQ/date_group/system_date',
-                u'/HHQ/HH_member/member_bckgrnd/respondent_match',
-                u'/HHQ/livestock_homestead_grp/livestock_homestead_prompt',
+                u'/HHQ/available',
+                u'/HHQ/location',
                 u'/HHQ/photo_permission'
             ]
         }
@@ -169,7 +169,8 @@ class XformTest(unittest.TestCase):
                 u'/HHQ/HH_member/member_bckgrnd/family_id',
                 u'/HHQ/HH_member/eligibility_screen_no',
                 u'/HHQ/HH_member',
-                u'/HHQ/water_sources_main_other'
+                u'/HHQ/water_sources_main_other',
+                u'/HHQ/HH_member/member_bckgrnd/respondent_match'
             ]
         }
         for f in no_relevant:

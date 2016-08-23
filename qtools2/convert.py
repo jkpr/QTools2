@@ -79,7 +79,11 @@ def xlsform_convert(xlsxfiles, **kwargs):
 
     xlsforms = []
     error = []
-    for f in set(xlsxfiles):
+    all_files = set(xlsxfiles)
+    if debug and len(all_files) < len(xlsxfiles):
+        # Print msg
+        pass
+    for f in all_files:
         try:
             xlsform = Xlsform(f, suffix=suffix, pma=pma)
             xlsforms.append(xlsform)
