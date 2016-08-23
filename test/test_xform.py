@@ -33,7 +33,7 @@ class XformTest(unittest.TestCase):
     outside qtools2 top folder.
     """
 
-    FORM_DIR = u'qtools2/test/forms'
+    FORM_DIR = u'test/forms'
 
     form_ids = {
         u'child_form.xml': u'child_form_id',
