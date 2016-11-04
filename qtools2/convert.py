@@ -86,6 +86,9 @@ def xlsform_convert(xlsxfiles, **kwargs):
             xlsforms.append(xlsform)
             if check_versioning:
                 xlsform.version_consistency()
+            if validate:
+                xlsform.undefined_columns_report()
+                xlsform.undefined_ref_report()
         except XlsformError as e:
             error.append(str(e))
         except IOError:
@@ -295,8 +298,17 @@ def report_edit_success(xlsforms):
 def check_hq_fq_headers(xlsforms):
     hq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'HHQ']
     fq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'FRS']
-    # TODO: check that each HQ has non-empty "save_form" and "save_instance"
-    # TODO: check that each FQ has non-empty "delete_form"
+    for h in hq:
+        if not len(h.save_instance) > 1 or not len(h.save_form) > 1:
+            m = (u'HQ ({}) does not define both "save_instance" and '
+                 u'"save_form" columns and their values')
+            m.format(h.short_file)
+            raise XlsformError(m)
+    for f in fq:
+        if not len(f.delete_form) > 1:
+            m = u'FQ ({}) missing "delete_form" column and "true()" value'
+            m.format(f.short_file)
+            raise XlsformError(m)
 
 
 def check_hq_fq_match(xlsforms):

@@ -58,7 +58,9 @@ def command_line_interface():
                 'not try to make PMA2020-specific edits.')
     parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
 
-    noval_help = 'Do not validate XML output with ODK Validate.'
+    noval_help = ('Do not validate XML output with ODK Validate. Do not '
+                  'perform extra checks on (1) data in undefined columns, '
+                  '(2) out of order variable references.')
     parser.add_argument('-n', '--novalidate', action='store_true',
                         help=noval_help)
 

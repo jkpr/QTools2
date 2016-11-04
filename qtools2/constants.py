@@ -89,6 +89,7 @@ EXTERNAL_TYPES = [u'select_one_external', u'select_multiple_external']
 
 SAVE_INSTANCE = u'save_instance'
 SAVE_FORM = u'save_form'
+DELETE_FORM = u'delete_form'
 TYPE = u'type'
 
 FORM_ID = u'form_id'

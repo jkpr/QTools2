@@ -56,17 +56,25 @@ class Xlsform:
         wb = self.get_workbook()
         # Survey
         self.save_instance = self.filter_column(wb, constants.SURVEY,
-                                                constants.SAVE_INSTANCE)[1:]
+                                                constants.SAVE_INSTANCE)
         self.save_form = self.filter_column(wb, constants.SURVEY,
-                                            constants.SAVE_FORM)[1:]
+                                            constants.SAVE_FORM)
+        self.delete_form = self.filter_column(wb, constants.SURVEY,
+                                              constants.DELETE_FORM)
         self.linking_consistency(self.path, self.save_instance, self.save_form)
+        self.survey_blanks = self.undefined_cols(wb, constants.SURVEY)
+        # Choices
+        self.choices_blanks = self.undefined_cols(wb, constants.CHOICES)
         # External choices
         self.external_choices_consistency(self.path, wb)
+        self.external_blanks = self.undefined_cols(wb,
+                                                   constants.EXTERNAL_CHOICES)
         # Settings
         self.settings = self.get_settings(wb)
         self.form_id = self.get_form_id(pma)
         self.form_title = self.get_form_title(pma)
         self.xml_root = self.get_xml_root(pma)
+        self.settings_blanks = self.undefined_cols(wb, constants.SETTINGS)
 
     def get_workbook(self):
         # IO Error if not existing
@@ -107,6 +115,24 @@ class Xlsform:
             # No survey found, nothing in survey, header not found
             pass
         return found
+
+    @staticmethod
+    def undefined_cols(wb, sheet):
+        try:
+            survey = wb.sheet_by_name(sheet)
+            headers = survey.row_values(0)
+            blank = [i for i, val in enumerate(headers) if val == u'']
+            headless = []
+            for col in blank:
+                full_column = survey.col_values(col)
+                found = filter(None, full_column)
+                if found:
+                    headless.append(col)
+            col_names = [Xlsform.number_to_excel_column(c) for c in headless]
+            return col_names
+        except (xlrd.XLRDError, IndexError):
+            # No survey found, nothing in survey
+            return []
 
     @staticmethod
     def find_external_type(wb):
@@ -315,8 +341,9 @@ class Xlsform:
 
     @staticmethod
     def linking_consistency(filename, save_instance, save_form):
-        has_save_instance = len(save_instance) > 0
-        has_save_form = len(save_form) > 0
+        # Test if columns have a value (first value is column header)
+        has_save_instance = len(save_instance) > 1
+        has_save_form = len(save_form) > 1
         inconsistent = has_save_instance ^ has_save_form
         if inconsistent:
             if has_save_instance:
@@ -346,3 +373,41 @@ class Xlsform:
                  u'save_form. Versions found: {}.')
             m = m.format(self.path, u', '.join(version))
             raise XlsformError(m)
+
+    def undefined_columns_report(self):
+        messages = []
+        if self.survey_blanks:
+            cols = u', '.join(self.survey_blanks)
+            m_survey = u'{} ({})'.format(constants.SURVEY, cols)
+            messages.append(m_survey)
+        if self.choices_blanks:
+            cols = u', '.join(self.choices_blanks)
+            m_choices = u'{} ({})'.format(constants.CHOICES, cols)
+            messages.append(m_choices)
+        if self.external_blanks:
+            cols = u', '.join(self.external_blanks)
+            m_external = u'{} ({})'.format(constants.EXTERNAL_CHOICES, cols)
+            messages.append(m_external)
+        if self.settings:
+            cols = u', '.join(self.settings_blanks)
+            m_settings = u'{} ({})'.format(constants.SETTINGS, cols)
+            messages.append(m_settings)
+        if messages:
+            #TODO raise XLSFormError with message
+            pass
+
+    def undefined_ref_report(self):
+        pass
+
+    @staticmethod
+    def number_to_excel_column(col):
+        letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        if len(letters) * len(letters) < col:
+            raise ValueError(col)
+        remainder = col % len(letters)
+        primary_letter = letters[remainder]
+        quotient = col // len(letters)
+        if quotient > 0:
+            return letters[quotient - 1] + primary_letter
+        else:
+            return primary_letter
