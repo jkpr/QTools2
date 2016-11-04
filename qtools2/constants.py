@@ -20,8 +20,65 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import naming_schemes
 
+country_codes = {
+    "Burkina Faso": "BF",
+    "DR Congo": "CD",
+    "Ethiopia": "ET",
+    "Ghana": "GH",
+    "Indonesia": "ID",
+    "Kenya": "KE",
+    "Niger": "NE",
+    "Nigeria": "NG",
+    "Uganda": "UG",
+    "Rajasthan": "RJ",
+    "Ivory Coast": "CI"
+}
+
+
+q_codes = {
+    "Household-Questionnaire": "HQ",
+    "Female-Questionnaire": "FQ",
+    "SDP-Questionnaire": "SQ",
+    "Listing": "listing",
+    "Selection": "sel",
+    "Reinterview-Questionnaire": "RQ"
+}
+
+
+xml_codes = {
+    "HQ": "HHQ",
+    "FQ": "FRS",
+    "SQ": "SDP",
+    "listing": "listing",
+    "sel": "Selection",
+    "RQ": "RQ"
+}
+
+
+"""
+Regular expressions defining the formulation of form file names and XLSForm
+metadata (and approval date)
+"""
+approval_date = 'May 2015'
+form_title_model = "[CC]R[#]-[((Household|Female|SDP|Reinterview)-Questionnaire)|Selection|Listing]-v[##]"
+form_id_model = "[HQ|FQ|SQ|RQ|listing|sel]-[cc]r[#]-v[##]"
+odk_file_model = form_title_model + "-[SIG]"
+form_title_re = "(" + "|".join(country_codes.values()) + ")R\\d{1,2}-(" + "|".join(q_codes.keys()) +")-v\\d{1,2}"
+form_id_re = "(" + "|".join(q_codes.values()) + ")-(" + "|".join([code.lower() for code in country_codes.values()]) + ")r\\d{1,2}-v\\d{1,2}"
+odk_file_re = form_title_re + "-[a-zA-Z]{2,}"
+
+
+"""
+A list of strings to delete from the questionnaires. These are just place
+holders.
+"""
+placeholders = ("#####",)
+
+
+"""
+Constants used throughout the package
+"""
 XML_EXT = u'.xml'
 
 SURVEY = u'survey'
@@ -42,24 +99,17 @@ LOGGING = u'logging'
 ITEMSETS = u'itemsets.csv'
 MEDIA_DIR_EXT = u'-media'
 
-approval_date = u'May 2015'
-odk_file_model = naming_schemes.odk_file_model
-odk_file_re = naming_schemes.odk_file_re
-
-q_codes = naming_schemes.questionnaire_codes
-xml_codes = naming_schemes.xml_codes
-
-placeholders = naming_schemes.str_to_delete
-
 # Command-line interface keywords
 SUFFIX = u'suffix'
 PREEXISTING = u'preexisting'
 PMA = u'pma'
-V2 = u'v2'
 CHECK_VERSIONING = u'check_versioning'
 STRICT_LINKING = u'strict_linking'
 VALIDATE = u'validate'
 DEBUG = u'debug'
 
-# Must be a dictionary with exactly one key-value pair
+"""
+Must be a dictionary with exactly one key-value pair. Used in searching within
+an Xform
+"""
 xml_ns = {'h': 'http://www.w3.org/2002/xforms'}

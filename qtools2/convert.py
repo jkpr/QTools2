@@ -59,9 +59,7 @@ from xlrd import XLRDError
 from cli import command_line_interface
 from xlsform import Xlsform
 from xform import Xform
-import qxmledit
 import constants
-
 from errors import XlsformError
 from errors import XformError
 from errors import ConvertError
@@ -71,7 +69,6 @@ def xlsform_convert(xlsxfiles, **kwargs):
     suffix = kwargs.get(constants.SUFFIX, u'')
     preexisting = kwargs.get(constants.PREEXISTING, False)
     pma = kwargs.get(constants.PMA, True)
-    v2 = kwargs.get(constants.V2, False)
     check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
     strict_linking = kwargs.get(constants.STRICT_LINKING, True)
     validate = kwargs.get(constants.VALIDATE, True)
@@ -107,6 +104,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
         error.extend(overwrite_errors)
     if pma:
         try:
+            check_hq_fq_headers(xlsforms)
             check_hq_fq_match(xlsforms)
         except XlsformError as e:
             error.append(str(e))
@@ -117,11 +115,9 @@ def xlsform_convert(xlsxfiles, **kwargs):
     successes = [xlsform_offline(xlsform, validate) for xlsform in xlsforms]
     report_conversion_success(successes, xlsforms)
     all_wins = all(successes)
-    if all_wins and v2:
+    if all_wins:
         xform_edit_and_check(xlsforms, strict_linking)
-    elif all_wins and not v2 and pma:
-        qxmledit.edit_all_checkers(xlsforms=xlsforms)
-    elif not all_wins:
+    else:  # not all_wins:
         m = (u'*** Removing all generated files because not all conversions '
              u'were successful')
         print m
@@ -296,6 +292,13 @@ def report_edit_success(xlsforms):
         print u' -- {}'.format(xlsform.outpath)
 
 
+def check_hq_fq_headers(xlsforms):
+    hq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'HHQ']
+    fq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'FRS']
+    # TODO: check that each HQ has non-empty "save_form" and "save_instance"
+    # TODO: check that each FQ has non-empty "delete_form"
+
+
 def check_hq_fq_match(xlsforms):
     hq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'HHQ']
     fq = [xlsform for xlsform in xlsforms if xlsform.xml_root == u'FRS']
@@ -309,7 +312,7 @@ def check_hq_fq_match(xlsforms):
                 fq.pop(i)
                 break
             else:
-                hq_fq_mismatch(one_h.short_name)
+                hq_fq_mismatch(one_h.short_file)
     if fq:
         hq_fq_mismatch(fq[0].short_file)
 
