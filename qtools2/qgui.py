@@ -25,27 +25,26 @@
 
 """Fire up the GUI for XLSForm conversion
 
-Under the hood, ``qxml`` does the dirty work. The code here presents the
+Under the hood, ``convert`` does the dirty work. The code here presents the
 knobs and whistles for setting options and choosing files.
 
 Currently, the code prints to console and the only graphical part is the
 file picker.
 
-Last edited: 11 May 2016
+Created: 11 May 2016
+Last edited: 8 November 2016
 """
 
 import os
-
-import convert
-import qxml
-import constants
-from errors import ConvertError
-
 from Tkinter import Tk
 from tkFileDialog import askopenfilenames
 
+import convert
+import constants
+from errors import ConvertError
 
-def start_gui(keep_alive=True, regular=False, v2=False):
+
+def start_gui(keep_alive=True, pma=True):
     print 'Please select source MS-Excel files for conversion.'
     Tk().withdraw()
     filenames = askopenfilenames(initialdir=os.getcwd())
@@ -55,18 +54,14 @@ def start_gui(keep_alive=True, regular=False, v2=False):
             m %= type(filenames)
             raise TypeError(m)
         filenames = [unicode(f) for f in filenames]
-        if v2:
-            kwargs = {
-                constants.PMA: not regular,
-                constants.V2: v2
-            }
-            convert.xlsform_convert(filenames, **kwargs)
-        else:
-            qxml.xlsform_convert(filenames, regular=regular)
+        kwargs = {
+                constants.PMA: pma,
+        }
+        convert.xlsform_convert(filenames, **kwargs)
     except (TypeError, NameError):
         print 'No files picked.'
     except ConvertError as e:
-        print str(e)
+        print unicode(e)
     if keep_alive:
         raw_input('Press enter to end the program.')
 

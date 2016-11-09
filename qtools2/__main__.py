@@ -37,10 +37,7 @@ reg_help = ('This flag indicates the program should convert to XForm and '
             'not try to make PMA2020-specific edits.')
 parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
 
-v2_help = ('Enforce the new style of PMA2020 form conversion where all '
-              'directives are stored in the XLSForms.')
-parser.add_argument('-v', '--v2', action='store_true', help=v2_help)
-
 args = parser.parse_args()
+pma = not args.regular
 
-qgui.start_gui(keep_alive=args.alive, regular=args.regular, v2=args.v2)
+qgui.start_gui(keep_alive=args.alive, pma=pma)

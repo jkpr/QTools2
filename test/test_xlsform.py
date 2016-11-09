@@ -37,20 +37,78 @@ class XlsformTest(unittest.TestCase):
 
     FORM_DIR = u'test/forms'
 
-    settings_file_list = [
-        u'settings-1.xlsx',
-        u'settings-2.xlsx',
-        u'settings-blank.xlsx',
-        u'settings-heading-only1.xlsx',
-        u'settings-heading-only2.xlsx',
-        u'settings-non.xlsx',
-        u'settings-staggered-bottom1.xlsx',
-        u'settings-staggered-bottom2.xlsx',
-        u'settings-staggered-top1.xlsx',
-        u'settings-staggered-top2.xlsx',
-        u'settings-staggered-top3.xlsx',
-        u'settings-repeat.xlsx'
-    ]
+    def test_get_identifiers(self):
+        """-> Test file names and PMA naming conventions"""
+        file_names = {
+            u'CIR3-Household-Questionnaire-v21-jkp.xlsx' :
+                (u'Household-Questionnaire', u'CI', u'3', u'v21'),
+            u'CIR1-Female-Questionnaire-v21-jkp.xls' :
+                (u'Female-Questionnaire', u'CI', u'1', u'v21'),
+            u'CIR2-Listing-v13-jef.xlsx' :
+                (u'Listing', u'CI', u'2', u'v13'),
+            u'CIR11-Selection-v14-lhm.xlsx' :
+                (u'Selection', u'CI', u'11', u'v14')
+        }
+
+        for f in file_names:
+            identifiers = Xlsform.get_identifiers(f)
+            answer = file_names[f]
+            msg = u'With "{}", found {}'.format(f, u', '.join(identifiers))
+            self.assertTrue(identifiers == answer, msg=msg)
+
+    def test_undefined_columns(self):
+        """-> Test files with/without header-less columns (stray cells)"""
+
+        # ------------------- PART 1 ------------------ #
+        file_list = {
+            # Filename => survey, choices, external chioces, settings
+            u'settings-staggered-bottom1.xlsx' : [
+                [], [], [], ['C', 'D']
+            ],
+            u'headerless-1.xlsx': [
+                ['Z', 'AA'], ['J'], ['F'], ['M']
+            ],
+            u'headerless-2.xlsx': [
+                ['E'], ['J', 'K', 'L', 'M'], [], ['C']
+            ],
+            u'headerless-3.xlsx' : [
+                ['E'], ['F', 'G', 'I'], [], []
+            ]
+        }
+
+        for f in file_list:
+            path = os.path.join(self.FORM_DIR, f)
+            xlsform = Xlsform(path, pma=False)
+            undef = file_list[f]
+            msg = u'Problem with "{}" tab in "{}"'
+            m0 = msg.format(u'survey', f)
+            self.assertTrue(xlsform.survey_blanks == undef[0], msg=m0)
+            m1 = msg.format(u'choices', f)
+            self.assertTrue(xlsform.choices_blanks == undef[1], msg=m1)
+            m2 = msg.format(u'external_choices', f)
+            self.assertTrue(xlsform.external_blanks == undef[2], msg=m2)
+            m3 = msg.format(u'settings', f)
+            self.assertTrue(xlsform.settings_blanks == undef[3], msg=m3)
+
+        # ------------------- PART 2 ------------------ #
+        file_list = [
+            u'child_form.xlsx',
+            u'convert_fail.xlsx',
+            u'ex-choice-type.xlsx'
+        ]
+
+        for f in file_list:
+            path = os.path.join(self.FORM_DIR, f)
+            xlsform = Xlsform(path, pma=False)
+            msg = u'Problem with "{}" tab in "{}"'
+            m0 = msg.format(u'survey', f)
+            self.assertTrue(xlsform.survey_blanks == [], msg=m0)
+            m1 = msg.format(u'choices', f)
+            self.assertTrue(xlsform.choices_blanks == [], msg=m1)
+            m2 = msg.format(u'external_choices', f)
+            self.assertTrue(xlsform.external_blanks == [], msg=m2)
+            m3 = msg.format(u'settings', f)
+            self.assertTrue(xlsform.settings_blanks == [], msg=m3)
 
     def test_has_external_choices_and_type(self):
         file_list = [
@@ -133,6 +191,21 @@ class XlsformTest(unittest.TestCase):
             self.assertRaises(XlsformError, Xlsform, path, pma=False)
 
     def test_single_find_settings(self):
+        settings_file_list = [
+            u'settings-1.xlsx',
+            u'settings-2.xlsx',
+            u'settings-blank.xlsx',
+            u'settings-heading-only1.xlsx',
+            u'settings-heading-only2.xlsx',
+            u'settings-non.xlsx',
+            u'settings-staggered-bottom1.xlsx',
+            u'settings-staggered-bottom2.xlsx',
+            u'settings-staggered-top1.xlsx',
+            u'settings-staggered-top2.xlsx',
+            u'settings-staggered-top3.xlsx',
+            u'settings-repeat.xlsx'
+        ]
+
         self.longMessage = True
         should_find = {
             u'settings-1.xlsx': {u'heading1': u'value1'},
@@ -161,7 +234,7 @@ class XlsformTest(unittest.TestCase):
             u'settings-repeat.xlsx': {u'heading1': u'value5'}
         }
 
-        for f in self.settings_file_list:
+        for f in settings_file_list:
             msg = u'With "{}"'.format(f)
             path = os.path.join(self.FORM_DIR, f)
             this_should_find = should_find[f]
