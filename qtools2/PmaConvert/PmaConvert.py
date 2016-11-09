@@ -1,21 +1,16 @@
-# Python 3
-# from tkinter import Frame, Tk, Label, Button, filedialog, W, SUNKEN, X
-# Python 2
-from Tkinter import Frame, Tk, Label, Button, W, SUNKEN, X, Text
+from config import config
+from Tkinter import Frame, Tk, Label, Button, W, BOTTOM, SUNKEN, X
 import tkFileDialog
-
-# - Note: Will re-import when status bar is working again.
-# from tkinter import BOTTOM
-#  - Experimentation:
-# from tkinter import Frame, Tk, Label, Entry, Button, BOTH, Text, Menu, END, filedialog
 
 
 class PmaConvert:
-    def __init__(self, root):
-        # Root
+    def __init__(self, root, config):
+        # Status and Configuration
+        self.module_status = self.get_module_status()
+
+        # Root Definition
         root.geometry('700x250')
         root.title('PMA Convert')
-        # root.title('PMA Convert, by Joe Flack & James Pringle')
 
         # UI
         ## Frames
@@ -42,9 +37,11 @@ class PmaConvert:
         self.q4_button.pack()
         self.log.pack(fill=X, expand=1)
 
-        self.status_bar = Label(self.centerFrame, text='Awaiting file selection.', bd=1, relief=SUNKEN, anchor=W)
+
         # - Note: Strangely this stopped anchoring to bottom suddenly, for some reason. So it is temporarily disabled.
-        # self.status_bar.pack(side=BOTTOM, fill=X)
+        self.status_bar = Label(self.centerFrame, text='Awaiting file selection.', bd=1, relief=SUNKEN, anchor=W)
+        if config['status_bar_on'] == True:
+            self.status_bar.pack(side=BOTTOM, fill=X)
 
         # Run
         root.mainloop()
@@ -64,6 +61,11 @@ class PmaConvert:
     def set_status(self, newStatus):
         self.status_bar.configure(text=newStatus)
 
+    def get_module_status(self):
+        # TODO: Get this to work correctly.
+        module_status = 'submodule'
+        return module_status
+
     def log_text(self, newText):
         self.log.configure(text=self.log['text'] + '\n' + newText)
 
@@ -73,22 +75,35 @@ class PmaConvert:
             self.log_text('Converting...')
 
             f = self.file_selection
-            versions = ['python', 'python2', 'python27']
+            if self.module_status == 'submodule':
+                self.convert_using_subprocess(f)
+            else:
+                self.convert_using_singlethreading(f)
 
-            from subprocess import Popen, PIPE
+    def convert_using_singlethreading(self, files_selected):
+        pass
 
-            for version in versions:
-                command_args = [version, '-m', 'qtools2.convert', '-v2']
-                for file in f:
-                    command_args.append(str(file))
-                p = Popen(command_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-                output, err = p.communicate(b"input data that is passed to subprocess' stdin")
-                rc = p.returncode
-                # TODO: Improve logging.
-                # TODO: If return code is success, break the loop.
-                self.log_text(str(rc))
-                self.log_text(str(err))
-                self.log_text(str(output))
+    def convert_using_multithreading(self, files_selected):
+        # Task: Create a multi-threading conversion implementation.
+        pass
+
+    def convert_using_subprocess(self, files_selected):
+        versions = ['python', 'python2', 'python27']
+
+        from subprocess import Popen, PIPE
+
+        for version in versions:
+            command_args = [version, '-m', 'qtools2.convert', '-v2']
+            for file in files_selected:
+                command_args.append(str(file))
+            p = Popen(command_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+            rc = p.returncode
+            # Task: Improve logging.
+            # Task: If return code is success, break the loop.
+            self.log_text(str(rc))
+            self.log_text(str(err))
+            self.log_text(str(output))
 
     def run_qtools2_conversion(self, python_version, files):
         # TODO: Restore this when ready. But also need to break up this tuple first.
@@ -100,20 +115,14 @@ class PmaConvert:
         # command = python_version + ' -m qtools2.convert -v2 ' + '/Users/joeflack4/Desktop/KER5-Female-Questionnaire-v12-jef.xls /Users/joeflack4/Desktop/KER5-Household-Questionnaire-v12-jef.xls'
         return command
 
+
 def run_conversion():
-    PmaConvert(Tk())
+    PmaConvert(Tk(), config)
+
 
 if __name__ == '__main__':
     run_conversion()
 
-    # TESTING - anchor, fill, expand still not working.
-    # root = Tk()
-    # root.geometry("550x600")
-    # frame = Frame(root)
-    # frame.pack()
-    # q4_entry = Label(frame, text='testing', anchor=W)
-    # q4_entry.pack(fill=X, expand=1)
-    # root.mainloop()
 
 # Tasks
 # - High Priority
