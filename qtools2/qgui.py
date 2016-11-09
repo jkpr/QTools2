@@ -25,7 +25,7 @@
 
 """Fire up the GUI for XLSForm conversion
 
-Under the hood, ``qxml`` does the dirty work. The code here presents the
+Under the hood, ``convert`` does the dirty work. The code here presents the
 knobs and whistles for setting options and choosing files.
 
 Currently, the code prints to console and the only graphical part is the

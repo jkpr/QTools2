@@ -393,10 +393,11 @@ class Xlsform:
             m_settings = u'{} ({})'.format(constants.SETTINGS, cols)
             messages.append(m_settings)
         if messages:
-            #TODO raise XLSFormError with message
+            # TODO raise XLSFormError with message
             pass
 
     def undefined_ref_report(self):
+        # TODO check that a variable does not reference a row behind it
         pass
 
     @staticmethod
