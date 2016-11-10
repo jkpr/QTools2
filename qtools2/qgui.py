@@ -52,7 +52,7 @@ class PmaConvert:
         self.module_status = self.get_module_status()
         self.file_selection = ''
         self.is_converting= False
-        self.options = config['default_gui_options']
+        self.options = config['option_definitions']
         gui_config = config['gui_config']
 
         # UI
@@ -80,28 +80,30 @@ class PmaConvert:
 
         self.choose_options_label = Label(self.main_frame, text='Choose conversion options.')
         self.choose_options_label.pack()
-        self.options['option1_var'] = BooleanVar()
-        self.option1 = Checkbutton(self.main_frame, text='Option 1', variable=self.options['option1_var'])
-        self.option1.pack()
-        self.option2_var = BooleanVar()
-        self.option2 = Checkbutton(self.main_frame, text='Option 2', variable=self.option2_var)
-        self.option2.pack()
-        self.option3_var = BooleanVar()
-        self.option3 = Checkbutton(self.main_frame, text='Option 3', variable=self.option3_var)
-        self.option3.pack()
-        self.option4_var = BooleanVar()
-        self.option4 = Checkbutton(self.main_frame, text='Option 4', variable=self.option4_var)
-        self.option4.pack()
-        self.option5_var = BooleanVar()
-        self.option5 = Checkbutton(self.main_frame, text='Option 5', variable=self.option5_var)
-        self.option5.pack()
-        self.option6_var = BooleanVar()
-        self.option6 = Checkbutton(self.main_frame, text='Option 6', variable=self.option6_var)
-        self.option6.pack()
-        self.option7_var = BooleanVar()
-        self.option7 = Checkbutton(self.main_frame, text='Option 7', variable=self.option7_var)
-        self.option7.pack()
 
+        ### Create Options Checkboxes
+        # Task: Dynamically generate: http://stackoverflow.com/questions/553784/can-you-use-a-string-to-instantiate-a-class-in-python
+        self.preexisting_option_value = BooleanVar()
+        self.preexisting_option = Checkbutton(self.main_frame, text=self.options['preexisting']['label'], variable=self.preexisting_option_value)
+        self.preexisting_option.pack()
+        self.regular_option_value = BooleanVar()
+        self.regular_option = Checkbutton(self.main_frame, text=self.options['regular']['label'], variable=self.regular_option_value)
+        self.regular_option.pack()
+        self.novalidate_option_value = BooleanVar()
+        self.novalidate_option = Checkbutton(self.main_frame, text=self.options['novalidate']['label'], variable=self.novalidate_option_value)
+        self.novalidate_option.pack()
+        self.ignore_version_option_value = BooleanVar()
+        self.ignore_version_option = Checkbutton(self.main_frame, text=self.options['ignore_version']['label'], variable=self.ignore_version_option_value)
+        self.ignore_version_option.pack()
+        self.linking_warn_option_value = BooleanVar()
+        self.linking_warn_option = Checkbutton(self.main_frame, text=self.options['linking_warn']['label'], variable=self.linking_warn_option_value)
+        self.linking_warn_option.pack()
+        self.debug_option_value = BooleanVar()
+        self.debug_option = Checkbutton(self.main_frame, text=self.options['debug']['label'], variable=self.debug_option_value)
+        self.debug_option.pack()
+        self.extras_option_value = BooleanVar()
+        self.extras_option = Checkbutton(self.main_frame, text=self.options['extras']['label'], variable=self.extras_option_value)
+        self.extras_option.pack()
 
         self.convert_label = Label(self.main_frame, text='2. Run conversion.')
         self.convert_label.pack()
@@ -178,41 +180,56 @@ class PmaConvert:
         self.log.bind("<1>", lambda event: self.log.focus_set())
 
     def convert(self):
-        self.log_text(self.options['option1_var'].get())
-
         if self.file_selection != '' and self.is_converting == False:
             self.log_text('Converting...')
             self.is_converting = True
             self.convert()
         elif self.file_selection != '' and self.is_converting == True:
             f = self.file_selection
-            options = []
-            for option in self.options:
-                pass
+
+            checkbox_values = {
+                'preexisting': self.preexisting_option_value.get(),
+                'regular': self.regular_option_value.get(),
+                'novalidate': self.novalidate_option_value.get(),
+                'ignore_version': self.ignore_version_option_value.get(),
+                'linking_warn': self.linking_warn_option_value.get(),
+                'debug': self.debug_option_value.get(),
+                'extras': self.extras_option_value.get()
+            }
+            arguments = []
+            for key in checkbox_values:
+                if checkbox_values[key] == True:
+                    arguments.append(self.options[key]['short-flag'])
+            # Testing
+            # for key in checkbox_values:
+            #     self.log_text(str(key) + str(checkbox_values[key]))
+            # self.log_text(str(arguments))
 
             if self.module_status == 'submodule':
-                self.convert_using_subprocess(f)
+                self.convert_using_subprocess(f, arguments)
             else:
                 try:
-                    self.convert_using_multithreading(f)
+                    self.convert_using_multithreading(f, arguments)
                 except:
-                    self.convert_using_singlethreading(f)
+                    self.convert_using_singlethreading(f, arguments)
 
-    def convert_using_singlethreading(self, files_selected):
+    def convert_using_singlethreading(self, files_selected, arguments):
         pass
 
-    def convert_using_multithreading(self, files_selected):
+    def convert_using_multithreading(self, files_selected, arguments):
         pass
 
-    def convert_using_subprocess(self, files_selected):
-        versions = ['python', 'python2', 'python27']
-
+    def convert_using_subprocess(self, files_selected, arguments):
         from subprocess import Popen, PIPE
 
+        versions = ['python', 'python2', 'python27']
         for version in versions:
             command_args = [version, '-m', 'qtools2.convert']
+            for arg in arguments:
+                command_args.append(arg)
             for file in files_selected:
                 command_args.append(str(file))
+                
             p = Popen(command_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             output, err = p.communicate(b"input data that is passed to subprocess' stdin")
             rc = p.returncode
