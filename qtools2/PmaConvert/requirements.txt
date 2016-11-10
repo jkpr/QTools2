@@ -1,3 +1,0 @@
-https://github.com/jkpr/pmaxform/zipball/master
-https://github.com/jkpr/QTools2/zipball/master
-py2app
