@@ -49,26 +49,9 @@ def command_line_interface():
     file_help = 'One or more paths to files destined for conversion.'
     parser.add_argument('xlsxfile', nargs='+', help=file_help)
 
-    overwrite_help = ('Include this flag to prevent overwriting '
-                      'pre-existing files.')
-    parser.add_argument('-p', '--preexisting', action='store_true',
-                        help=overwrite_help)
-
     reg_help = ('This flag indicates the program should convert to XForm and '
                 'not try to make PMA2020-specific edits.')
     parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
-
-    extras_help = ('Perform extra checks on (1) data in undefined columns and '
-                   '(2) out of order variable references.')
-    parser.add_argument('-e', '--extras', action='store_true')
-
-    noval_help = 'Do not validate XML output with ODK Validate.'
-    parser.add_argument('-n', '--no_validate', action='store_true',
-                        help=noval_help)
-
-    suffix_help = ('A suffix to add to the base file name. Cannot start with a '
-                   'hyphen ("-").')
-    parser.add_argument('-s', '--suffix', help=suffix_help)
 
     ignore_version_help = ('Ignore versioning in filename, form_id, '
                            'form_title, and save_form. In other words, the '
@@ -82,6 +65,23 @@ def command_line_interface():
                          'program')
     parser.add_argument('-l', '--linking_warn', action='store_true',
                         help=linking_warn_help)
+
+    extras_help = ('Perform extra checks on (1) data in undefined columns and '
+                   '(2) out of order variable references.')
+    parser.add_argument('-e', '--extras', action='store_true', help=extras_help)
+
+    noval_help = 'Do not validate XML output with ODK Validate.'
+    parser.add_argument('-n', '--no_validate', action='store_true',
+                        help=noval_help)
+
+    overwrite_help = ('Include this flag to prevent overwriting '
+                      'pre-existing files.')
+    parser.add_argument('-p', '--preexisting', action='store_true',
+                        help=overwrite_help)
+
+    suffix_help = ('A suffix to add to the base file name. Cannot start with a '
+                   'hyphen ("-").')
+    parser.add_argument('-s', '--suffix', help=suffix_help)
 
     debug_help = ('Show debug information. Helpful for squashing bugs.')
     parser.add_argument('-d', '--debug', action='store_true', help=debug_help)
