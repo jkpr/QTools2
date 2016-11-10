@@ -66,6 +66,14 @@ from errors import ConvertError
 
 
 def xlsform_convert(xlsxfiles, **kwargs):
+    # TESTING
+# def xlsform_convert(xlsxfiles, guiInstance, **kwargs):
+    # TESTING
+    # guiInstance.log_text('testing')
+    # from qgui import gui_log_listener
+    # gui_log_listener('testing2')
+    # TESTING
+
     suffix = kwargs.get(constants.SUFFIX, u'')
     preexisting = kwargs.get(constants.PREEXISTING, False)
     pma = kwargs.get(constants.PMA, True)
@@ -126,6 +134,10 @@ def xlsform_convert(xlsxfiles, **kwargs):
              u'were successful')
         print m
         remove_all_successes(successes, xlsforms)
+
+    # TESTING
+    return 'testing3'
+    # TESTING
 
 
 def xlsform_offline(xlsform, validate=True):

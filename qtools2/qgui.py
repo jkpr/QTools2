@@ -34,13 +34,16 @@ file picker.
 Created: 11 May 2016
 Last edited: 8 November 2016
 """
+import sys
 from os import getcwd
+import StringIO
 from qgui_config import config
 from Tkinter import Frame, Tk, Label, Button, W, BOTTOM, SUNKEN, X, Text, DISABLED, WORD, END, NORMAL, Menu,\
     Checkbutton, BooleanVar
 # from Tkinter import IntVar
 import tkFileDialog
-
+from convert import xlsform_convert
+from constants import SUFFIX, PREEXISTING, PMA, CHECK_VERSIONING, STRICT_LINKING, VALIDATE, EXTRAS, DEBUG
 
 class PmaConvert:
     def __init__(self, root, config):
@@ -61,7 +64,7 @@ class PmaConvert:
         self.position_main_frame(gui_config['screen_orientation'])
 
         ## Components
-        self.log = Text(self.main_frame, bd=1, relief=SUNKEN, width=80, height=30, state=DISABLED, spacing3=1,
+        self.log = Text(self.main_frame, bd=1, relief=SUNKEN, width=80, height=23, state=DISABLED, spacing3=1,
                         wrap=WORD)
 
         self.choose_files_label = Label(self.main_frame, text='1. Choose XLSForm (.xls or .xlsx) file(s) for conversion.')
@@ -78,7 +81,7 @@ class PmaConvert:
             self.output_location_label.pack()
             self.output_location_button.pack()
 
-        self.choose_options_label = Label(self.main_frame, text='Choose conversion options.')
+        self.choose_options_label = Label(self.main_frame, text='2. Choose conversion options.')
         self.choose_options_label.pack()
 
         ### Create Options Checkboxes
@@ -105,7 +108,7 @@ class PmaConvert:
         self.extras_option = Checkbutton(self.main_frame, text=self.options['extras']['label'], variable=self.extras_option_value)
         self.extras_option.pack()
 
-        self.convert_label = Label(self.main_frame, text='2. Run conversion.')
+        self.convert_label = Label(self.main_frame, text='3. Run conversion.')
         self.convert_label.pack()
 
         # Task: Add xscrollcommand and yscrollcommand.
@@ -133,6 +136,7 @@ class PmaConvert:
 
     # Functions
     def popup(self, event):
+        # Note: Currently doesn't work.
         self.context_menu.post(event.x_root, event.y_root)
         # display the popup menu
         try:
@@ -176,7 +180,6 @@ class PmaConvert:
         return module_status
 
     def log_text(self, newText):
-        # self.log.configure(state=self.log['text'] + '\n' + newText)
         self.log.configure(state=NORMAL)
         self.log.insert(END, str(newText) + '\n\n')
         self.log.configure(state=DISABLED)
@@ -191,7 +194,7 @@ class PmaConvert:
             f = self.file_selection
             versions = ['python', 'python2', 'python27']
 
-            checkbox_values = {
+            self.checkbox_values = {
                 'preexisting': self.preexisting_option_value.get(),
                 'regular': self.regular_option_value.get(),
                 'novalidate': self.novalidate_option_value.get(),
@@ -201,81 +204,43 @@ class PmaConvert:
                 'extras': self.extras_option_value.get()
             }
             arguments = []
-            for key in checkbox_values:
-                if checkbox_values[key] == True:
+            for key in self.checkbox_values:
+                if self.checkbox_values[key] == True:
                     arguments.append(self.options[key]['short-flag'])
-            # Testing
-            # for key in checkbox_values:
-            #     self.log_text(str(key) + str(checkbox_values[key]))
-            # self.log_text(str(arguments))
 
             if self.module_status == 'sub-module':
                 self.convert_using_subprocess(f, arguments, versions)
             else:
                 try:
-                    self.convert_using_multithreading(f, arguments, versions)
+                    self.convert_using_multithreading(f)
                 except:
-                    self.convert_using_singlethreading(f, arguments, versions)
+                    self.convert_using_singlethreading(f)
 
-    def convert_using_singlethreading(self, files_selected, arguments, versions):
-        # Get working here first. Then do multithreading.
+    def convert_using_singlethreading(self, files_selected):
+        # Note: The 'not's are inversions of the boolean value selected by the user.
+        kwargs = {
+            SUFFIX: u'',
+            PREEXISTING: self.checkbox_values['preexisting'],
+            PMA: not(self.checkbox_values['regular']),
+            CHECK_VERSIONING: not(self.checkbox_values['ignore_version']),
+            STRICT_LINKING: not(self.checkbox_values['linking_warn']),
+            VALIDATE: not(self.checkbox_values['novalidate']),
+            EXTRAS: self.checkbox_values['extras'],
+            DEBUG: self.checkbox_values['debug']
+        }
 
-        # Old Method
-        # for version in versions:
-        #     command_args = [version, '-m', 'qtools2.convert']
-        #     for arg in arguments:
-        #         command_args.append(arg)
-        #     for file in files_selected:
-        #         command_args.append(str(file))
-
-        self.log_text(arguments)
-        from convert import xlsform_convert
-        # Reference:
-        # - Kwargs printout: {u'strict_linking': True, u'preexisting': False, u'suffix': u'', u'check_versioning': True, u'extras': False, u'pma': True, u'debug': False, u'validate': True}
-        args= {u'strict_linking': True, u'preexisting': False, u'suffix': u'', u'check_versioning': True, u'extras': False, u'pma': True, u'debug': False, u'validate': True}
-        # xlsform_convert(files_selected,
-        #                 suffix=u'',
-        #                 preexisting=True,
-        #                 pma=True,
-        #                 check_versioning=True,
-        #                 validate=True,
-        #                 extras=True,
-        #                 debug=True)
-        xlsform_convert(files_selected, args)
+        buffer = StringIO.StringIO()
+        sys.stdout = buffer
+        sys.stderr = buffer
+        xlsform_convert(files_selected, **kwargs)
+        self.log_text(buffer.getvalue())
 
 
-        # from cli.py
-        # kwargs = {
-        #     constants.SUFFIX: suffix,
-        #     constants.PREEXISTING: args.preexisting,
-        #     constants.PMA: pma,
-        #     constants.CHECK_VERSIONING: check_versioning,
-        #     constants.STRICT_LINKING: strict_linking,
-        #     constants.VALIDATE: validate,
-        #     constants.EXTRAS: args.extras,
-        #     constants.DEBUG: args.debug
-        # }
-
-        # from convert.py
-        # suffix = kwargs.get(constants.SUFFIX, u'')
-        # preexisting = kwargs.get(constants.PREEXISTING, False)
-        # pma = kwargs.get(constants.PMA, True)
-        # check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
-        # strict_linking = kwargs.get(constants.STRICT_LINKING, True)
-        # validate = kwargs.get(constants.VALIDATE, True)
-        # extras = kwargs.get(constants.EXTRAS, False)
-        # debug = kwargs.get(constants.DEBUG, False)
-
-
-            # Testing
-            # self.log_text(str(command_args))
-
-
-    def convert_using_multithreading(self, files_selected, arguments, versions):
+    def convert_using_multithreading(self, files_selected):
+        # TODO: Get this working.
         # import thread
-        self.convert_using_singlethreading(files_selected, arguments, versions)
+        self.convert_using_singlethreading(files_selected)
         pass
-
 
     def convert_using_subprocess(self, files_selected, arguments, versions):
         from subprocess import Popen, PIPE
@@ -296,16 +261,6 @@ class PmaConvert:
             self.log_text(str(err))
             self.log_text(str(output))
 
-    def run_qtools2_conversion(self, python_version, files):
-        # TODO: Restore this when ready. But also need to break up this tuple first.
-        # command = python_version + ' -m qtools2.convert -v2 ' + str(files)
-        f = ''
-        for file in files:
-            f += ' ' + str(file)
-        command = python_version + ' -m qtools2.convert -v2' + f
-        # command = python_version + ' -m qtools2.convert -v2 ' + '/Users/joeflack4/Desktop/KER5-Female-Questionnaire-v12-jef.xls /Users/joeflack4/Desktop/KER5-Household-Questionnaire-v12-jef.xls'
-        return command
-
 
 def run_conversion():
     PmaConvert(Tk(), config)
@@ -316,29 +271,22 @@ if __name__ == '__main__':
 
 
 # Tasks
-# - High Priority
-# TODO: Change API to call qtools directly. Set conditional to run subprocess if needed.
-# Log
-# TODO: Get feedback in log when conversion is sucessful. This may require some work with qtools2, or otherwise find a way to get info from the console.
-# TODO: Log needs to have fixed width.
 # UI
 # TODO: Fix positioning issues (fill, anchor, expand, etc), or use grid instead.
 # Window
 # TODO: Need to reset window as well after log gives its feedback.
 # - Medium Priority
-# Options
-# TODO: Might want to add some conversion options.
-# Dependency Hell
-# TODO: Alert on load if dependencies do not exist (try/except, perhaps)
-# TODO: Make installers.
-# TODO: Make standalone .app and .exe files.
-# - Low Prioirity
 # Misc
-# TODO: Position in middle of screen on load.
+# TODO: Position window in middle of screen on load.
 # TODO: Have in focus in front on load.
 # TODO: Add a cancel button that dynamically appears if conversion is in-process.
 # TODO: Add an error alert / message when buttons are clicked, but have been disabled.
 # TODO: Fix graphical issue with a minus ('-') showing for a moment when clicking a checkbox.
+# - Low Prioirity
+# Dependency Management for Standalone
+# TODO: Alert on load if dependencies do not exist (try/except, perhaps)
+# TODO: Make installers.
+# TODO: Make standalone .app and .exe files.
 # Subprocess
 # TODO: May be able to try multiple versions of python by checking the return code. And only return log text if conversion was successful.
 
