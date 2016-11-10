@@ -58,10 +58,12 @@ def command_line_interface():
                 'not try to make PMA2020-specific edits.')
     parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
 
-    noval_help = ('Do not validate XML output with ODK Validate. Do not '
-                  'perform extra checks on (1) data in undefined columns, '
-                  '(2) out of order variable references.')
-    parser.add_argument('-n', '--novalidate', action='store_true',
+    extras_help = ('Perform extra checks on (1) data in undefined columns and '
+                   '(2) out of order variable references.')
+    parser.add_argument('-e', '--extras', action='store_true')
+
+    noval_help = 'Do not validate XML output with ODK Validate.'
+    parser.add_argument('-n', '--no_validate', action='store_true',
                         help=noval_help)
 
     suffix_help = ('A suffix to add to the base file name. Cannot start with a '
@@ -94,7 +96,7 @@ def command_line_interface():
     check_versioning = not args.ignore_version
     pma = not args.regular
     strict_linking = not args.linking_warn
-    validate = not args.novalidate
+    validate = not args.no_validate
 
     kwargs = {
         constants.SUFFIX: suffix,
@@ -103,6 +105,7 @@ def command_line_interface():
         constants.CHECK_VERSIONING: check_versioning,
         constants.STRICT_LINKING: strict_linking,
         constants.VALIDATE: validate,
+        constants.EXTRAS: args.extras,
         constants.DEBUG: args.debug
     }
 

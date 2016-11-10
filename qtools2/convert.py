@@ -72,6 +72,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
     check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
     strict_linking = kwargs.get(constants.STRICT_LINKING, True)
     validate = kwargs.get(constants.VALIDATE, True)
+    extras = kwargs.get(constants.EXTRAS, False)
     debug = kwargs.get(constants.DEBUG, False)
 
     xlsforms = []
@@ -86,7 +87,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
             xlsforms.append(xlsform)
             if check_versioning:
                 xlsform.version_consistency()
-            if validate:
+            if extras:
                 xlsform.undefined_columns_report()
                 xlsform.undefined_ref_report()
         except XlsformError as e:

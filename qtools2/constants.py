@@ -107,6 +107,7 @@ PMA = u'pma'
 CHECK_VERSIONING = u'check_versioning'
 STRICT_LINKING = u'strict_linking'
 VALIDATE = u'validate'
+EXTRAS = u'extras'
 DEBUG = u'debug'
 
 """
