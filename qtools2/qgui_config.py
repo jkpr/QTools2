@@ -4,7 +4,7 @@ config = {
         'status_bar_on': False,
         'output_location_on': False
     },
-    'default_options': {
+    'default_gui_options': {
         'preexisting': False,
         'regular': False,
         'novalidate': False,
