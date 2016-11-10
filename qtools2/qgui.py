@@ -34,7 +34,7 @@ file picker.
 Created: 11 May 2016
 Last edited: 8 November 2016
 """
-
+from os import getcwd
 from qgui_config import config
 from Tkinter import Frame, Tk, Label, Button, W, BOTTOM, SUNKEN, X, Text, DISABLED, WORD, END, NORMAL, Menu,\
     Checkbutton, BooleanVar
@@ -168,8 +168,11 @@ class PmaConvert:
         self.status_bar.configure(text=newStatus)
 
     def get_module_status(self):
-        # TODO: Get this to work correctly.
-        module_status = 'submodule'
+        current_directory = getcwd()[-7:]
+        if current_directory == 'qtools2':
+            module_status = 'sibling-module'
+        else:
+            module_status = 'sub-module'
         return module_status
 
     def log_text(self, newText):
@@ -186,6 +189,7 @@ class PmaConvert:
             self.convert()
         elif self.file_selection != '' and self.is_converting == True:
             f = self.file_selection
+            versions = ['python', 'python2', 'python27']
 
             checkbox_values = {
                 'preexisting': self.preexisting_option_value.get(),
@@ -205,31 +209,84 @@ class PmaConvert:
             #     self.log_text(str(key) + str(checkbox_values[key]))
             # self.log_text(str(arguments))
 
-            if self.module_status == 'submodule':
-                self.convert_using_subprocess(f, arguments)
+            if self.module_status == 'sub-module':
+                self.convert_using_subprocess(f, arguments, versions)
             else:
                 try:
-                    self.convert_using_multithreading(f, arguments)
+                    self.convert_using_multithreading(f, arguments, versions)
                 except:
-                    self.convert_using_singlethreading(f, arguments)
+                    self.convert_using_singlethreading(f, arguments, versions)
 
-    def convert_using_singlethreading(self, files_selected, arguments):
+    def convert_using_singlethreading(self, files_selected, arguments, versions):
+        # Get working here first. Then do multithreading.
+
+        # Old Method
+        # for version in versions:
+        #     command_args = [version, '-m', 'qtools2.convert']
+        #     for arg in arguments:
+        #         command_args.append(arg)
+        #     for file in files_selected:
+        #         command_args.append(str(file))
+
+        self.log_text(arguments)
+        from convert import xlsform_convert
+        # Reference:
+        # - Kwargs printout: {u'strict_linking': True, u'preexisting': False, u'suffix': u'', u'check_versioning': True, u'extras': False, u'pma': True, u'debug': False, u'validate': True}
+        args= {u'strict_linking': True, u'preexisting': False, u'suffix': u'', u'check_versioning': True, u'extras': False, u'pma': True, u'debug': False, u'validate': True}
+        # xlsform_convert(files_selected,
+        #                 suffix=u'',
+        #                 preexisting=True,
+        #                 pma=True,
+        #                 check_versioning=True,
+        #                 validate=True,
+        #                 extras=True,
+        #                 debug=True)
+        xlsform_convert(files_selected, args)
+
+
+        # from cli.py
+        # kwargs = {
+        #     constants.SUFFIX: suffix,
+        #     constants.PREEXISTING: args.preexisting,
+        #     constants.PMA: pma,
+        #     constants.CHECK_VERSIONING: check_versioning,
+        #     constants.STRICT_LINKING: strict_linking,
+        #     constants.VALIDATE: validate,
+        #     constants.EXTRAS: args.extras,
+        #     constants.DEBUG: args.debug
+        # }
+
+        # from convert.py
+        # suffix = kwargs.get(constants.SUFFIX, u'')
+        # preexisting = kwargs.get(constants.PREEXISTING, False)
+        # pma = kwargs.get(constants.PMA, True)
+        # check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
+        # strict_linking = kwargs.get(constants.STRICT_LINKING, True)
+        # validate = kwargs.get(constants.VALIDATE, True)
+        # extras = kwargs.get(constants.EXTRAS, False)
+        # debug = kwargs.get(constants.DEBUG, False)
+
+
+            # Testing
+            # self.log_text(str(command_args))
+
+
+    def convert_using_multithreading(self, files_selected, arguments, versions):
+        # import thread
+        self.convert_using_singlethreading(files_selected, arguments, versions)
         pass
 
-    def convert_using_multithreading(self, files_selected, arguments):
-        pass
 
-    def convert_using_subprocess(self, files_selected, arguments):
+    def convert_using_subprocess(self, files_selected, arguments, versions):
         from subprocess import Popen, PIPE
 
-        versions = ['python', 'python2', 'python27']
         for version in versions:
             command_args = [version, '-m', 'qtools2.convert']
             for arg in arguments:
                 command_args.append(arg)
             for file in files_selected:
                 command_args.append(str(file))
-                
+
             p = Popen(command_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             output, err = p.communicate(b"input data that is passed to subprocess' stdin")
             rc = p.returncode
