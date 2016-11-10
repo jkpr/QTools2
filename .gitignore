@@ -2,12 +2,11 @@
 env
 MANIFEST
 dist
-qtools2/test/*.xlsx
-qtools2/test/*.xml
+test/*.xlsx
+test/*.xml
 *.pyc
-qtools2/.idea
 .idea
-qtools2/test/confidential
+test/confidential
 .cache
-qtools2/test/config/
-dev/
+test/config/
+dev

@@ -10,7 +10,7 @@ setup(
     url='https://github.com/jkpr/QTools2',
     packages=[
         'qtools2', 
-        'qtools2.test'
+        'test'
     ],
     license='LICENSE.txt',
     description='Useful tools for working with PMA2020 Questionnaires',

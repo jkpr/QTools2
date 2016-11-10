@@ -23,6 +23,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+"""
+
+Author: James K. Pringle
+E-mail: jpringle@jhu.edu
+Last-modified: 11 November 2016
+"""
+
 import argparse
 
 import constants
@@ -48,21 +55,18 @@ def command_line_interface():
                         help=overwrite_help)
 
     reg_help = ('This flag indicates the program should convert to XForm and '
-                'not try to make PMA2020-specific edits. To simply convert to '
-                'XML and nothing more, use this flag without the -v2 flag.')
+                'not try to make PMA2020-specific edits.')
     parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
 
-    noval_help = 'Do not validate XML output with ODK Validate.'
+    noval_help = ('Do not validate XML output with ODK Validate. Do not '
+                  'perform extra checks on (1) data in undefined columns, '
+                  '(2) out of order variable references.')
     parser.add_argument('-n', '--novalidate', action='store_true',
                         help=noval_help)
 
     suffix_help = ('A suffix to add to the base file name. Cannot start with a '
                    'hyphen ("-").')
     parser.add_argument('-s', '--suffix', help=suffix_help)
-
-    v2_help = ('Enforce the new style of form conversion where all '
-               'directives are stored in the XLSForms.')
-    parser.add_argument('-v2', '--version2', action='store_true', help=v2_help)
 
     ignore_version_help = ('Ignore versioning in filename, form_id, '
                            'form_title, and save_form. In other words, the '
@@ -96,7 +100,6 @@ def command_line_interface():
         constants.SUFFIX: suffix,
         constants.PREEXISTING: args.preexisting,
         constants.PMA: pma,
-        constants.V2: args.version2,
         constants.CHECK_VERSIONING: check_versioning,
         constants.STRICT_LINKING: strict_linking,
         constants.VALIDATE: validate,
