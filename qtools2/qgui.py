@@ -37,25 +37,33 @@ Last edited: 8 November 2016
 
 from qgui_config import config
 from Tkinter import Frame, Tk, Label, Button, W, BOTTOM, SUNKEN, X, Text, DISABLED, WORD, END, NORMAL, Menu,\
-    Checkbutton, IntVar
+    Checkbutton, BooleanVar
+# from Tkinter import IntVar
 import tkFileDialog
 
 
 class PmaConvert:
     def __init__(self, root, config):
-        # Status and Configuration
-        self.module_status = self.get_module_status()
-
         # Root Definition
         root.geometry('700x700')
         root.title('PMA Convert')
 
+        # Configuration and Variables
+        self.module_status = self.get_module_status()
+        self.file_selection = ''
+        self.is_converting= False
+        self.options = config['default_options']
+        gui_config = config['gui_config']
+
         # UI
         ## Frames
         self.main_frame = Frame(root)
-        self.position_main_frame(config['screen_orientation'])
+        self.position_main_frame(gui_config['screen_orientation'])
 
         ## Components
+        self.log = Text(self.main_frame, bd=1, relief=SUNKEN, width=80, height=30, state=DISABLED, spacing3=1,
+                        wrap=WORD)
+
         self.choose_files_label = Label(self.main_frame, text='1. Choose XLSForm (.xls or .xlsx) file(s) for conversion.')
         # TODO: Get spacing to work.
         # self.choose_files_label.grid(row=3, column=3, padx=(50, 50))
@@ -66,31 +74,31 @@ class PmaConvert:
 
         self.output_location_label = Label(self.main_frame, text='Choose location for output file(s).')
         self.output_location_button = Button(self.main_frame, text='Choose location...', fg='black')
-        if config['output_location_on'] == True:
+        if gui_config['output_location_on'] == True:
             self.output_location_label.pack()
             self.output_location_button.pack()
 
         self.choose_options_label = Label(self.main_frame, text='Choose conversion options.')
         self.choose_options_label.pack()
-        self.option1_var = IntVar()
-        self.option1 = Checkbutton(self.main_frame, text='Option 1', variable=self.option1_var)
+        self.options['option1_var'] = BooleanVar()
+        self.option1 = Checkbutton(self.main_frame, text='Option 1', variable=self.options['option1_var'])
         self.option1.pack()
-        self.option2_var = IntVar()
+        self.option2_var = BooleanVar()
         self.option2 = Checkbutton(self.main_frame, text='Option 2', variable=self.option2_var)
         self.option2.pack()
-        self.option3_var = IntVar()
+        self.option3_var = BooleanVar()
         self.option3 = Checkbutton(self.main_frame, text='Option 3', variable=self.option3_var)
         self.option3.pack()
-        self.option4_var = IntVar()
+        self.option4_var = BooleanVar()
         self.option4 = Checkbutton(self.main_frame, text='Option 4', variable=self.option4_var)
         self.option4.pack()
-        self.option5_var = IntVar()
+        self.option5_var = BooleanVar()
         self.option5 = Checkbutton(self.main_frame, text='Option 5', variable=self.option5_var)
         self.option5.pack()
-        self.option6_var = IntVar()
+        self.option6_var = BooleanVar()
         self.option6 = Checkbutton(self.main_frame, text='Option 6', variable=self.option6_var)
         self.option6.pack()
-        self.option7_var = IntVar()
+        self.option7_var = BooleanVar()
         self.option7 = Checkbutton(self.main_frame, text='Option 7', variable=self.option7_var)
         self.option7.pack()
 
@@ -99,9 +107,6 @@ class PmaConvert:
         self.convert_label.pack()
 
         # Task: Add xscrollcommand and yscrollcommand.
-        self.log = Text(self.main_frame, bd=1, relief=SUNKEN, width=80, height=30, state=DISABLED, spacing3=1, wrap=WORD)
-        self.file_selection = ''
-        self.is_converting= False
         self.convert_button = Button(self.main_frame, text='Convert', fg='black', command=self.convert)
         self.convert_button.pack()
         self.log.pack(fill=X, expand=1)
@@ -113,21 +118,18 @@ class PmaConvert:
 
         # Task: Fix menus. They're not working.
         self.context_menu = Menu(self.main_frame, tearoff=0)
-        self.context_menu.add_command(label="Undo", command=self.hello)
-        self.context_menu.add_command(label="Redo", command=self.hello)
+        self.context_menu.add_command(label="Convert", command=self.convert)
         self.main_frame.bind("<Button-3>", self.popup)
 
         # - Note: Strangely this stopped anchoring to bottom suddenly, for some reason. So it is temporarily disabled.
         self.status_bar = Label(self.main_frame, text='Awaiting file selection.', bd=1, relief=SUNKEN, anchor=W)
-        if config['status_bar_on'] == True:
+        if gui_config['status_bar_on'] == True:
             self.status_bar.pack(side=BOTTOM, fill=X)
 
         # Run
         root.mainloop()
 
-    def hello(self):
-        print "hello!"
-
+    # Functions
     def popup(self, event):
         self.context_menu.post(event.x_root, event.y_root)
         # display the popup menu
@@ -137,8 +139,6 @@ class PmaConvert:
             # make sure to release the grab (Tk 8.0a1 only)
             self.context_menu.grab_release()
 
-
-    # Functions
     def position_main_frame(self, orientation):
         if orientation == 'center':
             x, y, a = .5, .5, 'c'
@@ -173,27 +173,35 @@ class PmaConvert:
     def log_text(self, newText):
         # self.log.configure(state=self.log['text'] + '\n' + newText)
         self.log.configure(state=NORMAL)
-        self.log.insert(END, newText + '\n\n')
+        self.log.insert(END, str(newText) + '\n\n')
         self.log.configure(state=DISABLED)
         self.log.bind("<1>", lambda event: self.log.focus_set())
 
     def convert(self):
-        self.log_text('Converting...')
+        self.log_text(self.options['option1_var'].get())
 
         if self.file_selection != '' and self.is_converting == False:
+            self.log_text('Converting...')
             self.is_converting = True
-
+            self.convert()
+        elif self.file_selection != '' and self.is_converting == True:
             f = self.file_selection
+            options = []
+            for option in self.options:
+                pass
+
             if self.module_status == 'submodule':
                 self.convert_using_subprocess(f)
             else:
-                self.convert_using_singlethreading(f)
+                try:
+                    self.convert_using_multithreading(f)
+                except:
+                    self.convert_using_singlethreading(f)
 
     def convert_using_singlethreading(self, files_selected):
         pass
 
     def convert_using_multithreading(self, files_selected):
-        # Task: Create a multi-threading conversion implementation.
         pass
 
     def convert_using_subprocess(self, files_selected):
@@ -202,7 +210,7 @@ class PmaConvert:
         from subprocess import Popen, PIPE
 
         for version in versions:
-            command_args = [version, '-m', 'qtools2.convert', '-v2']
+            command_args = [version, '-m', 'qtools2.convert']
             for file in files_selected:
                 command_args.append(str(file))
             p = Popen(command_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -256,6 +264,7 @@ if __name__ == '__main__':
 # TODO: Have in focus in front on load.
 # TODO: Add a cancel button that dynamically appears if conversion is in-process.
 # TODO: Add an error alert / message when buttons are clicked, but have been disabled.
+# TODO: Fix graphical issue with a minus ('-') showing for a moment when clicking a checkbox.
 # Subprocess
 # TODO: May be able to try multiple versions of python by checking the return code. And only return log text if conversion was successful.
 
