@@ -30,7 +30,7 @@ from qtools2 import convert
 
 class XlsformTest(unittest.TestCase):
 
-    FORM_DIR = u'test/forms'
+    FORM_DIR = u'qtools2/test/forms'
 
     def test_hq_fq_required_linking_columns(self):
         """-> Test HQ has save_instance, save_form and FQ has delete_form"""

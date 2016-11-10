@@ -6,7 +6,7 @@ test/*.xlsx
 test/*.xml
 *.pyc
 .idea
-test/confidential
+qtools2/test/confidential
 .cache
-test/config/
+qtools2/test/config/
 dev
