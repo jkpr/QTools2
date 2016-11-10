@@ -52,7 +52,7 @@ class PmaConvert:
         self.module_status = self.get_module_status()
         self.file_selection = ''
         self.is_converting= False
-        self.options = config['default_options']
+        self.options = config['default_gui_options']
         gui_config = config['gui_config']
 
         # UI
