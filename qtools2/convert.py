@@ -199,10 +199,10 @@ def validate_xpaths(xlsforms, xforms):
     slash_flag = False
     for xlsform in xlsforms:
         try:
-            this_save_instance = xlsform.save_instance
+            this_save_instance = xlsform.save_instance[1:]
             not_found = [True] * len(this_save_instance)
             no_form_id_match = [False] * len(xlsform.save_form)
-            for i, save_form in enumerate(xlsform.save_form):
+            for i, save_form in enumerate(xlsform.save_form[1:]):
                 try:
                     ind = form_ids.index(save_form)
                     match = xforms[ind]

@@ -362,7 +362,7 @@ class Xlsform:
             self.short_name,
             self.form_id,
             self.form_title,
-        ],  self.save_form)
+        ],  self.save_form[1:])
         version = set()
         for word in to_check:
             found = prog.search(word)
