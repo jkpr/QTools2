@@ -35,7 +35,7 @@ class XlsformTest(unittest.TestCase):
     outside qtools2 top folder.
     """
 
-    FORM_DIR = u'test/forms'
+    FORM_DIR = u'qtools2/test/forms'
 
     def test_get_identifiers(self):
         """-> Test file names and PMA naming conventions"""
