@@ -54,12 +54,11 @@ In order to use `qtools2`, there are two primary ways. The simpler way is to poi
 
 ## Easiest way to use `qtools2` for PMA2020 forms
 
-The easiest way to use `qtools2` is to use an appropriate file from the `scripts` [folder of this repository][6]. The zip file has all of the scripts. In order to download a single script, click its link, then click "Raw," then save the contents (in the browser, File > Save). The table below explains the key differences.
+The easiest way to use `qtools2` is to use a file from the `scripts` [folder of this repository][6]. In order to download a script, click its link, then click "Raw," then save the contents (in the browser, File > Save). The table below explains what is available.
 
 |      Script name      | Purpose |
 | --------------------- | ------- |
-| `pma-convert.py`        | Convert one or several of the **six PMA2020 core forms**. Form-linking instructions must be inside the XLSForm under "save_instance," "save_form," and "delete_form" columns. |
-| `xlsform-offline.py`    | Convert one or several of *any* kind of XLSForm. Mimics a standard ODK converter. The app [XLSForm Offline][7] does equivalent work. |
+| `xlsform-convert.py`    | Convert one or several of *any* kind of XLSForm with a GUI. |
 
 
 Windows usually associates `.py` files with the Python executable. Thus, a Windows user should only need to double-click the script file icon. That starts the Python interpreter and runs the code.
