@@ -315,12 +315,12 @@ def check_hq_fq_headers(xlsforms):
         if not len(h.save_instance) > 1 or not len(h.save_form) > 1:
             m = (u'HQ ({}) does not define both "save_instance" and '
                  u'"save_form" columns and their values')
-            m.format(h.short_file)
+            m = m.format(h.short_file)
             raise XlsformError(m)
     for f in fq:
         if not len(f.delete_form) > 1:
             m = u'FQ ({}) missing "delete_form" column and "true()" value'
-            m.format(f.short_file)
+            m = m.format(f.short_file)
             raise XlsformError(m)
 
 

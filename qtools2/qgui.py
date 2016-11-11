@@ -28,33 +28,35 @@
 Under the hood, ``convert`` does the dirty work. The code here presents the
 knobs and whistles for setting options and choosing files.
 
-Currently, the code prints to console and the only graphical part is the
-file picker.
-
 Created: 11 May 2016
-Last edited: 8 November 2016
+Last edited: 10 November 2016
+E-mail: jflack@jhu.edu
 """
 import sys
-from os import getcwd
+import traceback
 import StringIO
-from qgui_config import config
-from Tkinter import Frame, Tk, Label, Button, W, BOTTOM, SUNKEN, X, Text, DISABLED, WORD, END, NORMAL, Menu,\
-    Checkbutton, BooleanVar
-# from Tkinter import IntVar
+from Tkinter import Frame, Tk, Label, Button, W, BOTTOM, SUNKEN, X, Text, \
+    DISABLED, WORD, END, NORMAL, Menu, Checkbutton, BooleanVar
 import tkFileDialog
+
+from errors import ConvertError
+from qgui_config import config
 from convert import xlsform_convert
-from constants import SUFFIX, PREEXISTING, PMA, CHECK_VERSIONING, STRICT_LINKING, VALIDATE, EXTRAS, DEBUG
+from constants import SUFFIX, PREEXISTING, PMA, CHECK_VERSIONING, \
+    STRICT_LINKING, VALIDATE, EXTRAS, DEBUG
+
 
 class PmaConvert:
-    def __init__(self, root, config):
+    def __init__(self, config):
+        root = Tk()
+
         # Root Definition
-        root.geometry('700x700')
+        root.geometry('1100x700')
         root.title('PMA Convert')
 
         # Configuration and Variables
-        self.module_status = self.get_module_status()
         self.file_selection = ''
-        self.is_converting= False
+        self.is_converting = False
         self.options = config['option_definitions']
         gui_config = config['gui_config']
 
@@ -64,61 +66,87 @@ class PmaConvert:
         self.position_main_frame(gui_config['screen_orientation'])
 
         ## Components
-        self.log = Text(self.main_frame, bd=1, relief=SUNKEN, width=80, height=23, state=DISABLED, spacing3=1,
-                        wrap=WORD)
+        self.log = Text(self.main_frame, bd=1, relief=SUNKEN, width=140,
+                        height=23, state=DISABLED, spacing3=1, wrap=WORD)
 
-        self.choose_files_label = Label(self.main_frame, text='1. Choose XLSForm (.xls or .xlsx) file(s) for conversion.')
+        choose_text = ('1. Choose XLSForm (.xls or .xlsx) file(s) for '
+                       'conversion.')
+        self.choose_files_label = Label(self.main_frame, text=choose_text)
         # TODO: Get spacing to work.
         # self.choose_files_label.grid(row=3, column=3, padx=(50, 50))
         # self.choose_files_label.grid(row=3, column=3, pady=(50, 50))
         self.choose_files_label.pack()
-        self.choose_files_button = Button(self.main_frame, text='Choose file...', fg='black', command=self.on_open)
+        self.choose_files_button = Button(self.main_frame,
+                                          text='Choose file...', fg='black',
+                                          command=self.on_open)
         self.choose_files_button.pack()
 
-        self.output_location_label = Label(self.main_frame, text='Choose location for output file(s).')
-        self.output_location_button = Button(self.main_frame, text='Choose location...', fg='black')
-        if gui_config['output_location_on'] == True:
+        out_text = 'Choose location for output file(s).'
+        self.output_location_label = Label(self.main_frame, text=out_text)
+        self.output_location_button = Button(self.main_frame,
+                                             text='Choose location...',
+                                             fg='black')
+        if gui_config['output_location_on'] is True:
             self.output_location_label.pack()
             self.output_location_button.pack()
 
-        self.choose_options_label = Label(self.main_frame, text='2. Choose conversion options.')
+        self.choose_options_label = Label(self.main_frame,
+                                          text='2. Choose conversion options.')
         self.choose_options_label.pack()
 
         ### Create Options Checkboxes
-        # Task: Dynamically generate: http://stackoverflow.com/questions/553784/can-you-use-a-string-to-instantiate-a-class-in-python
-        self.preexisting_option_value = BooleanVar()
-        self.preexisting_option = Checkbutton(self.main_frame, text=self.options['preexisting']['label'], variable=self.preexisting_option_value)
-        self.preexisting_option.pack()
-        self.regular_option_value = BooleanVar()
-        self.regular_option = Checkbutton(self.main_frame, text=self.options['regular']['label'], variable=self.regular_option_value)
-        self.regular_option.pack()
-        self.novalidate_option_value = BooleanVar()
-        self.novalidate_option = Checkbutton(self.main_frame, text=self.options['novalidate']['label'], variable=self.novalidate_option_value)
-        self.novalidate_option.pack()
-        self.ignore_version_option_value = BooleanVar()
-        self.ignore_version_option = Checkbutton(self.main_frame, text=self.options['ignore_version']['label'], variable=self.ignore_version_option_value)
-        self.ignore_version_option.pack()
-        self.linking_warn_option_value = BooleanVar()
-        self.linking_warn_option = Checkbutton(self.main_frame, text=self.options['linking_warn']['label'], variable=self.linking_warn_option_value)
+        # Task: Dynamically generate: http://stackoverflow.com/questions/...
+        # ...553784/can-you-use-a-string-to-instantiate-a-class-in-python
+        self.preexisting = BooleanVar()
+        pre_text = self.options['preexisting']['label']
+        self.preexisting_opt = Checkbutton(self.main_frame, text=pre_text,
+                                           variable=self.preexisting)
+        self.preexisting_opt.pack()
+        self.regular = BooleanVar()
+        reg_text = self.options['regular']['label']
+        self.regular_opt = Checkbutton(self.main_frame, text=reg_text,
+                                       variable=self.regular)
+        self.regular_opt.pack()
+        self.novalidate = BooleanVar()
+        noval_text = self.options['novalidate']['label']
+        self.novalidate_opt = Checkbutton(self.main_frame, text=noval_text,
+                                          variable=self.novalidate)
+        self.novalidate_opt.pack()
+        self.ignore_version = BooleanVar()
+        ig_text = self.options['ignore_version']['label']
+        self.ignore_version_opt = Checkbutton(self.main_frame, text=ig_text,
+                                              variable=self.ignore_version)
+        self.ignore_version_opt.pack()
+        self.linking_warn = BooleanVar()
+        link_text = self.options['linking_warn']['label']
+        self.linking_warn_option = Checkbutton(self.main_frame, text=link_text,
+                                               variable=self.linking_warn)
         self.linking_warn_option.pack()
-        self.debug_option_value = BooleanVar()
-        self.debug_option = Checkbutton(self.main_frame, text=self.options['debug']['label'], variable=self.debug_option_value)
+        self.debug = BooleanVar()
+        debug_text = self.options['debug']['label']
+        self.debug_option = Checkbutton(self.main_frame, text=debug_text,
+                                        variable=self.debug)
         self.debug_option.pack()
-        self.extras_option_value = BooleanVar()
-        self.extras_option = Checkbutton(self.main_frame, text=self.options['extras']['label'], variable=self.extras_option_value)
+        self.extras = BooleanVar()
+        extras_text = self.options['extras']['label']
+        self.extras_option = Checkbutton(self.main_frame, text=extras_text,
+                                         variable=self.extras)
         self.extras_option.pack()
 
         self.convert_label = Label(self.main_frame, text='3. Run conversion.')
         self.convert_label.pack()
 
         # Task: Add xscrollcommand and yscrollcommand.
-        self.convert_button = Button(self.main_frame, text='Convert', fg='black', command=self.convert)
+        self.convert_button = Button(self.main_frame, text='Convert',
+                                     fg='black', command=self.convert)
         self.convert_button.pack()
         self.log.pack(fill=X, expand=1)
-        self.log_text('PMA Convert allows you to convert .xls or .xlsx form definition files to files which are '
-                      'compatible with ODK Collect.\n\nIf you need to copy and paste from this log, highlight the text '
-                      'and press CTRL+C to copy. Then press CTRL+V to paste.\n\n'
-                      '===============================================================================\n\n'
+        self.log_text('PMA Convert allows you to convert .xls or .xlsx form '
+                      'definition files to files which are compatible with ODK '
+                      'Collect.\n\nIf you need to copy and paste from this '
+                      'log, highlight the text and press CTRL+C to copy. Then '
+                      'press CTRL+V to paste.\n\n'
+                      '====================================================\n\n'
                       'Awaiting file selection.')
 
         # Task: Fix menus. They're not working.
@@ -126,9 +154,12 @@ class PmaConvert:
         self.context_menu.add_command(label="Convert", command=self.convert)
         self.main_frame.bind("<Button-3>", self.popup)
 
-        # - Note: Strangely this stopped anchoring to bottom suddenly, for some reason. So it is temporarily disabled.
-        self.status_bar = Label(self.main_frame, text='Awaiting file selection.', bd=1, relief=SUNKEN, anchor=W)
-        if gui_config['status_bar_on'] == True:
+        # - Note: Strangely this stopped anchoring to bottom suddenly, for some
+        # reason. So it is temporarily disabled.
+        self.status_bar = Label(self.main_frame,
+                                text='Awaiting file selection.',
+                                bd=1, relief=SUNKEN, anchor=W)
+        if gui_config['status_bar_on'] is True:
             self.status_bar.pack(side=BOTTOM, fill=X)
 
         # Run
@@ -155,115 +186,72 @@ class PmaConvert:
             return self.main_frame.pack()
 
     def on_open(self):
-        if self.is_converting == False:
-            file_types = [('XLS Files', '*.xls'), ('XLSX Files', '*.xlsx'), ('All files', '*')]
-            self.file_selection = tkFileDialog.askopenfilename(filetypes=file_types, title='Open one or more files.',
-                                                        message='Open one or more files', multiple=1)
-            if self.file_selection != '':
-                self.set_status('Click on Convert to convert files.')
-                log_output = 'Ready for conversion: \n'
-                for file in self.file_selection:
-                    log_output += '* ' + str(file) + '\n'
-                log_output = log_output[:-1] # Removes the last '\n'.
-                self.log.configure(self.log_text(log_output))
-                print(log_output)
+        file_types = [
+            ('XLS Files', '*.xls'),
+            ('XLSX Files', '*.xlsx'),
+            ('All files', '*')
+        ]
+        self.file_selection = tkFileDialog.askopenfilename(
+            filetypes=file_types, title='Open one or more files.',
+            message='Open one or more files', multiple=1
+        )
+        if self.file_selection != '':
+            self.set_status('Click on Convert to convert files.')
+            log_output = 'Ready for conversion: \n'
+            for file in self.file_selection:
+                log_output += '* ' + str(file) + '\n'
+            log_output = log_output[:-1] # Removes the last '\n'.
+            self.log.configure(self.log_text(log_output))
 
-    def set_status(self, newStatus):
-        self.status_bar.configure(text=newStatus)
+    def set_status(self, new_status):
+        self.status_bar.configure(text=new_status)
 
-    def get_module_status(self):
-        current_directory = getcwd()[-7:]
-        if current_directory == 'qtools2':
-            module_status = 'sibling-module'
-        else:
-            module_status = 'sub-module'
-        return module_status
-
-    def log_text(self, newText):
+    def log_text(self, new_text):
         self.log.configure(state=NORMAL)
-        self.log.insert(END, str(newText) + '\n\n')
+        self.log.insert(END, str(new_text) + '\n\n')
         self.log.configure(state=DISABLED)
         self.log.bind("<1>", lambda event: self.log.focus_set())
 
     def convert(self):
-        if self.file_selection != '' and self.is_converting == False:
-            self.log_text('Converting...')
-            self.is_converting = True
-            self.convert()
-        elif self.file_selection != '' and self.is_converting == True:
+        if self.file_selection != '':
             f = self.file_selection
-            versions = ['python', 'python2', 'python27']
 
-            self.checkbox_values = {
-                'preexisting': self.preexisting_option_value.get(),
-                'regular': self.regular_option_value.get(),
-                'novalidate': self.novalidate_option_value.get(),
-                'ignore_version': self.ignore_version_option_value.get(),
-                'linking_warn': self.linking_warn_option_value.get(),
-                'debug': self.debug_option_value.get(),
-                'extras': self.extras_option_value.get()
+            kwargs = {
+                SUFFIX: u'',
+                PREEXISTING: self.preexisting.get(),
+                PMA: not self.regular.get(),
+                CHECK_VERSIONING: not self.ignore_version.get(),
+                STRICT_LINKING: not self.linking_warn.get(),
+                VALIDATE: not self.novalidate.get(),
+                EXTRAS: self.extras.get(),
+                DEBUG: self.debug.get()
             }
-            arguments = []
-            for key in self.checkbox_values:
-                if self.checkbox_values[key] == True:
-                    arguments.append(self.options[key]['short-flag'])
 
-            if self.module_status == 'sub-module':
-                self.convert_using_subprocess(f, arguments, versions)
+            buffer = StringIO.StringIO()
+            if not kwargs[DEBUG]:
+                sys.stdout = buffer
+                sys.stderr = buffer
             else:
-                try:
-                    self.convert_using_multithreading(f)
-                except:
-                    self.convert_using_singlethreading(f)
+                self.log_text('--> DEBUG MODE: check console output')
 
-    def convert_using_singlethreading(self, files_selected):
-        # Note: The 'not's are inversions of the boolean value selected by the user.
-        kwargs = {
-            SUFFIX: u'',
-            PREEXISTING: self.checkbox_values['preexisting'],
-            PMA: not(self.checkbox_values['regular']),
-            CHECK_VERSIONING: not(self.checkbox_values['ignore_version']),
-            STRICT_LINKING: not(self.checkbox_values['linking_warn']),
-            VALIDATE: not(self.checkbox_values['novalidate']),
-            EXTRAS: self.checkbox_values['extras'],
-            DEBUG: self.checkbox_values['debug']
-        }
+            try:
+                xlsform_convert(f, **kwargs)
+            except ConvertError as e:
+                print unicode(e)
+            except OSError as e:
+                # Should catch WindowsError, impossible to test on Mac
+                traceback.print_exc()
+                print e
 
-        buffer = StringIO.StringIO()
-        sys.stdout = buffer
-        sys.stderr = buffer
-        xlsform_convert(files_selected, **kwargs)
-        self.log_text(buffer.getvalue())
+            if not kwargs[DEBUG]:
+                sys.stdout = sys.__stdout__
+                sys.stderr = sys.__stderr__
 
-
-    def convert_using_multithreading(self, files_selected):
-        # TODO: Get this working.
-        # import thread
-        self.convert_using_singlethreading(files_selected)
-        pass
-
-    def convert_using_subprocess(self, files_selected, arguments, versions):
-        from subprocess import Popen, PIPE
-
-        for version in versions:
-            command_args = [version, '-m', 'qtools2.convert']
-            for arg in arguments:
-                command_args.append(arg)
-            for file in files_selected:
-                command_args.append(str(file))
-
-            p = Popen(command_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-            output, err = p.communicate(b"input data that is passed to subprocess' stdin")
-            rc = p.returncode
-            # Task: Improve logging.
-            # Task: If return code is success, break the loop.
-            self.log_text(str(rc))
-            self.log_text(str(err))
-            self.log_text(str(output))
+            self.log_text(buffer.getvalue())
 
 
 def run_conversion():
-    PmaConvert(Tk(), config)
+    PmaConvert(config)
 
 
 if __name__ == '__main__':

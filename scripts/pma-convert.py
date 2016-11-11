@@ -1,6 +1,5 @@
 #!/usr/bin/env python
+from qtools2.qgui import run_conversion
 
-from qtools2.qgui import start_gui
-
-# For PMA-style conversion, with all directives in XLSForm
-start_gui(pma=True)
+if __name__ == '__main__':
+    run_conversion()
