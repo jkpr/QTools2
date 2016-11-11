@@ -66,14 +66,6 @@ from errors import ConvertError
 
 
 def xlsform_convert(xlsxfiles, **kwargs):
-    # TESTING
-# def xlsform_convert(xlsxfiles, guiInstance, **kwargs):
-    # TESTING
-    # guiInstance.log_text('testing')
-    # from qgui import gui_log_listener
-    # gui_log_listener('testing2')
-    # TESTING
-
     suffix = kwargs.get(constants.SUFFIX, u'')
     preexisting = kwargs.get(constants.PREEXISTING, False)
     pma = kwargs.get(constants.PMA, True)
@@ -134,10 +126,6 @@ def xlsform_convert(xlsxfiles, **kwargs):
              u'were successful')
         print m
         remove_all_successes(successes, xlsforms)
-
-    # TESTING
-    return 'testing3'
-    # TESTING
 
 
 def xlsform_offline(xlsform, validate=True):
@@ -315,12 +303,12 @@ def check_hq_fq_headers(xlsforms):
         if not len(h.save_instance) > 1 or not len(h.save_form) > 1:
             m = (u'HQ ({}) does not define both "save_instance" and '
                  u'"save_form" columns and their values')
-            m.format(h.short_file)
+            m = m.format(h.short_file)
             raise XlsformError(m)
     for f in fq:
         if not len(f.delete_form) > 1:
             m = u'FQ ({}) missing "delete_form" column and "true()" value'
-            m.format(f.short_file)
+            m = m.format(f.short_file)
             raise XlsformError(m)
 
 
