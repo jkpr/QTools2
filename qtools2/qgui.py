@@ -56,8 +56,6 @@ class PmaConvert:
         root.title('PMA Convert')
 
         # Configuration and Variables
-#   DELETE
-#       self.module_status = self.get_module_status()
         self.file_selection = ''
         self.is_converting = False
         self.options = config['option_definitions']
