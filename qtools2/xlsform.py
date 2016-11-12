@@ -388,13 +388,14 @@ class Xlsform:
             cols = u', '.join(self.external_blanks)
             m_external = u'{} ({})'.format(constants.EXTERNAL_CHOICES, cols)
             messages.append(m_external)
-        if self.settings:
+        if self.settings_blanks:
             cols = u', '.join(self.settings_blanks)
             m_settings = u'{} ({})'.format(constants.SETTINGS, cols)
             messages.append(m_settings)
         if messages:
-            # TODO raise XLSFormError with message
-            pass
+            m = u'Tabs in "{}" with undefined columns: {}'
+            m = m.format(self.short_file, u', '.join(messages))
+            raise XlsformError(m)
 
     def undefined_ref_report(self):
         # TODO check that a variable does not reference a row behind it
