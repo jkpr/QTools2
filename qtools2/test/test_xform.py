@@ -142,7 +142,7 @@ class XformTest(unittest.TestCase):
             these_xpaths = no_calculate[f]
             xml_root = this_xform.get_xml_root()
             for xpath in these_xpaths:
-                this_xform.check_no_calculate(xpath, xml_root)
+                this_xform.check_bind_calculate(xpath, xml_root)
 
         for f in yes_calculate:
             path = os.path.join(self.FORM_DIR, f)
@@ -150,7 +150,44 @@ class XformTest(unittest.TestCase):
             these_xpaths = yes_calculate[f]
             xml_root = this_xform.get_xml_root()
             for xpath in these_xpaths:
-                self.assertRaises(XformError, this_xform.check_no_calculate,
+                self.assertRaises(XformError, this_xform.check_bind_calculate,
+                                  xpath, xml_root)
+
+    def test_has_relevant_bind(self):
+        no_relevant = {
+            u'KEShort-HQ.xml': [
+                u'/HHQ/your_name',
+                u'/HHQ/date_group/system_date',
+                u'/HHQ/available',
+                u'/HHQ/location',
+                u'/HHQ/photo_permission'
+            ]
+        }
+        yes_relevant = {
+            u'KEShort-HQ.xml': [
+                u'/HHQ/your_name_check',
+                u'/HHQ/HH_member/member_bckgrnd/family_id',
+                u'/HHQ/HH_member/eligibility_screen_no',
+                u'/HHQ/HH_member',
+                u'/HHQ/water_sources_main_other',
+                u'/HHQ/HH_member/member_bckgrnd/respondent_match'
+            ]
+        }
+        for f in no_relevant:
+            path = os.path.join(self.FORM_DIR, f)
+            this_xform = Xform(filename=path, form_id=self.form_ids[f])
+            these_xpaths = no_relevant[f]
+            xml_root = this_xform.get_xml_root()
+            for xpath in these_xpaths:
+                this_xform.check_bind_relevant(xpath, xml_root)
+
+        for f in yes_relevant:
+            path = os.path.join(self.FORM_DIR, f)
+            this_xform = Xform(filename=path, form_id=self.form_ids[f])
+            these_xpaths = yes_relevant[f]
+            xml_root = this_xform.get_xml_root()
+            for xpath in these_xpaths:
+                self.assertRaises(XformError, this_xform.check_bind_relevant,
                                   xpath, xml_root)
 
     def test_has_no_bind(self):
@@ -173,7 +210,7 @@ class XformTest(unittest.TestCase):
             these_xpaths = no_bind[f]
             xml_root = this_xform.get_xml_root()
             for xpath in these_xpaths:
-                self.assertRaises(XformError, this_xform.check_no_calculate,
+                self.assertRaises(XformError, this_xform.check_bind_attr,
                                   xpath, xml_root)
 
 

@@ -12,10 +12,16 @@ setup(
         'qtools2', 
         'qtools2.test'
     ],
+    package_data={
+        'qtools2.test': [
+            'forms/*.xlsx',
+            'forms/*.xml',
+        ],
+    },
     license='LICENSE.txt',
     description='Useful tools for working with PMA2020 Questionnaires',
     long_description=open('README.md').read(),
     install_requires=[
-        'pmaxform>=1.0.1'
+        'pmaxform>=1.0.2'
     ],
 )

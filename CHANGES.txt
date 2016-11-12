@@ -1,3 +1,8 @@
+v0.2.3, 11 November 2016
+ * Much enhanced GUI
+ * Removed cruft
+ * Added checks for head-less columns (sign of mis-aligned columns) and delete_form in FQ
+
 v0.2.2, 10 August 2016
  * Better error messages from ODK Validate
  * Fixed scripts (GUI)
