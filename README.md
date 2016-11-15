@@ -96,7 +96,7 @@ python -m qtools2
 
 and check the usage by adding the `--help` flag to the above command.
 
-
+NOTE: the `-v2` option has been removed as of 0.2.3.
 
 ## Updates
 
