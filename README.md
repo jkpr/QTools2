@@ -117,6 +117,7 @@ pip install https://github.com/jkpr/QTools2/zipball/master --upgrade
 - Another executable for `pip` is `pip2`.
 - The most recent Java is not required, but successful tests have only been run with Java 1.6 through Java 1.8.
 - A dependency of `pmaxform` is `lxml`, which can cause problems on Mac. If there are problems, the best guide is on [StackOverflow][8].
+- Qtools2 may run without Java. Java is only needed for ODK Validate, which can be bypassed by using the "No validate" option.
 
 [8]: http://stackoverflow.com/questions/19548011/cannot-install-lxml-on-mac-os-x-10-9
 
