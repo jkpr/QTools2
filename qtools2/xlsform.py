@@ -65,6 +65,10 @@ class Xlsform:
         self.survey_blanks = self.undefined_cols(wb, constants.SURVEY)
         # Choices
         self.choices_blanks = self.undefined_cols(wb, constants.CHOICES)
+        self.multiple_lists = self.find_multiple_lists(wb, constants.CHOICES)
+        self.name_dups = self.find_name_dups(wb, constants.CHOICES)
+        self.unused_lists = self.find_unused_lists(wb)
+
         # External choices
         self.external_choices_consistency(self.path, wb)
         self.external_blanks = self.undefined_cols(wb,
@@ -115,6 +119,55 @@ class Xlsform:
             # No survey found, nothing in survey, header not found
             pass
         return found
+
+    @staticmethod
+    def get_column(sheet, header):
+        headers = sheet.row_values(0)
+        col = headers.index(header)
+        return sheet.col_values(col)
+
+    @staticmethod
+    def find_multiple_lists(wb, sheetname):
+        dups = []
+        try:
+            choices = wb.sheet_by_name(sheetname)
+            lists = Xlsform.get_column(choices, constants.LIST_NAME)
+            current_list = None
+            list_start = 0
+            found = set()
+
+            for i, item in enumerate(lists):
+                if i == 0:
+                    continue
+                if item != u'':
+                    if current_list is None:
+                        current_list = item
+                        list_start = i
+                    elif item != current_list and current_list not in found:
+                        found.add(current_list)
+                        current_list = item
+                        list_start = i
+                    elif item != current_list and current_list in found:
+                        dups.append((list_start, current_list))
+                        current_list = item
+                        list_start = i
+            if current_list is not None and current_list in found:
+                dups.append((list_start, current_list))
+        except xlrd.XLRDError:
+            # sheet not found
+            pass
+        except ValueError:
+            # list_name not found in choices
+            pass
+        return dups
+
+    @staticmethod
+    def find_name_dups(wb, sheetname):
+        pass
+
+    @staticmethod
+    def find_unused_lists(wb):
+        pass
 
     @staticmethod
     def undefined_cols(wb, sheet):
