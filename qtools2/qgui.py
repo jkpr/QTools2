@@ -191,10 +191,15 @@ class PmaConvert:
             ('XLSX Files', '*.xlsx'),
             ('All files', '*')
         ]
-        self.file_selection = tkFileDialog.askopenfilename(
-            filetypes=file_types, title='Open one or more files.',
-            message='Open one or more files', multiple=1
-        )
+        try:
+            self.file_selection = tkFileDialog.askopenfilename(
+                filetypes=file_types, title='Open one or more files.',
+                message='Open one or more files', multiple=1
+            )
+        except:
+            self.file_selection = tkFileDialog.askopenfilename(
+                filetypes=file_types, title='Open one or more files.', multiple=1
+            )
         if self.file_selection != '':
             self.set_status('Click on Convert to convert files.')
             log_output = 'Ready for conversion: \n'
