@@ -92,6 +92,7 @@ SAVE_FORM = u'save_form'
 DELETE_FORM = u'delete_form'
 TYPE = u'type'
 LIST_NAME = u'list_name'
+NAME = u'name'
 
 FORM_ID = u'form_id'
 FORM_TITLE = u'form_title'

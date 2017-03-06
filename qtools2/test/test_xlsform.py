@@ -40,7 +40,7 @@ class XlsformTest(unittest.TestCase):
     FORM_DIR = u'qtools2/test/forms'
 
     def test_multiple_choicelist(self):
-        """-> Alert when there are two separate choice lists of the same name"""
+        """Alert when there are two separate choice lists of the same name"""
 
         file_names = {
             u'choices_two_spots.xlsx': [(6, u'y_n_list')]
@@ -54,25 +54,32 @@ class XlsformTest(unittest.TestCase):
                 self.assertTrue(a == b, msg=msg)
 
     def test_duplicate_choicename(self):
-        """-> Alert when a choice list has multiple options with the same
+        """Alert when a choice list has multiple options with the same
         name"""
 
         file_names = {
-            u'choices_dup_names.xlsx': {
-                u'middle_list': {u'top'}
-            }
+            u'choices_dup_names.xlsx': [
+                    (6, u'middle_list', u'top')
+            ]
         }
 
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_name_dups(wb, constants)
+            for a, b in itertools.izip_longest(file_names[f], found):
+                msg = u'With {}, expected {}, found {}'.format(f, a, b)
+                self.assertTrue(a == b, msg=msg)
+
     def test_unused_choicelist(self):
-        """-> Alert when a choice list is not used in the form"""
+        """Alert when a choice list is not used in the form"""
 
         file_names = {
             u'choices_unused_list.xlsx': {u'unused_list'}
         }
 
 
-    def test_get_identifiers(self):
-        """-> Test file names and PMA naming conventions"""
+        def test_get_identifiers(self):
+            """Test file names and PMA naming conventions"""
         file_names = {
             u'CIR3-Household-Questionnaire-v21-jkp.xlsx' :
                 (u'Household-Questionnaire', u'CI', u'3', u'v21'),
@@ -91,7 +98,7 @@ class XlsformTest(unittest.TestCase):
             self.assertTrue(identifiers == answer, msg=msg)
 
     def test_undefined_columns(self):
-        """-> Test files with/without header-less columns (stray cells)"""
+        """Test files with/without header-less columns (stray cells)"""
 
         # ------------------- PART 1 ------------------ #
         file_list = {

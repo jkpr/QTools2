@@ -54,6 +54,7 @@ class Xlsform:
         self.media_dir = self.get_media_dir(self.outpath)
 
         wb = self.get_workbook()
+
         # Survey
         self.save_instance = self.filter_column(wb, constants.SURVEY,
                                                 constants.SAVE_INSTANCE)
@@ -63,6 +64,7 @@ class Xlsform:
                                               constants.DELETE_FORM)
         self.linking_consistency(self.path, self.save_instance, self.save_form)
         self.survey_blanks = self.undefined_cols(wb, constants.SURVEY)
+            
         # Choices
         self.choices_blanks = self.undefined_cols(wb, constants.CHOICES)
         self.multiple_lists = self.find_multiple_lists(wb, constants.CHOICES)
@@ -73,12 +75,19 @@ class Xlsform:
         self.external_choices_consistency(self.path, wb)
         self.external_blanks = self.undefined_cols(wb,
                                                    constants.EXTERNAL_CHOICES)
+        self.external_multiple = self.find_multiple_lists(wb,
+                constants.EXTERNAL_CHOICES)
+
         # Settings
         self.settings = self.get_settings(wb)
         self.form_id = self.get_form_id(pma)
         self.form_title = self.get_form_title(pma)
         self.xml_root = self.get_xml_root(pma)
         self.settings_blanks = self.undefined_cols(wb, constants.SETTINGS)
+
+        # Language
+        self.language_consistency = self.check_languages(wb)
+        self.missing_translations = self.find_missing_translations(wb)
 
     def get_workbook(self):
         # IO Error if not existing
@@ -128,12 +137,22 @@ class Xlsform:
 
     @staticmethod
     def find_multiple_lists(wb, sheetname):
+        """Find list_names that are defined in multiple places
+
+        Args:
+            wb: An `xlrd` Workbook instance
+            sheetname (str): The name of the sheet to search for
+
+        Returns:
+            A list of tuples (row number, list name). If it is in this result 
+            then the list name is defined more than once. The start
+            rows of the subsequent duplicate list_names are included.
+        """
         dups = []
         try:
             choices = wb.sheet_by_name(sheetname)
             lists = Xlsform.get_column(choices, constants.LIST_NAME)
             current_list = None
-            list_start = 0
             found = set()
 
             for i, item in enumerate(lists):
@@ -141,18 +160,14 @@ class Xlsform:
                     continue
                 if item != u'':
                     if current_list is None:
+                        found.add(item)
                         current_list = item
-                        list_start = i
-                    elif item != current_list and current_list not in found:
-                        found.add(current_list)
+                    elif item != current_list and item not in found:
+                        found.add(item)
                         current_list = item
-                        list_start = i
-                    elif item != current_list and current_list in found:
-                        dups.append((list_start, current_list))
+                    elif item != current_list and item in found:
+                        dups.append((i, item))
                         current_list = item
-                        list_start = i
-            if current_list is not None and current_list in found:
-                dups.append((list_start, current_list))
         except xlrd.XLRDError:
             # sheet not found
             pass
@@ -163,16 +178,71 @@ class Xlsform:
 
     @staticmethod
     def find_name_dups(wb, sheetname):
-        pass
+        """Get a list of duplicate names from within common choice lists
+
+        Silenty returns empty if either "list_name" or "name" is missing.
+
+        Args:
+            wb: An `xlrd` Workbook instance
+            sheetname (str): The name of the sheet to search for
+
+        Return:
+            A list of tuples (row, list name, name) for each duplicate name 
+            found (not the first).
+        """
+        dups = []
+        try:
+            choices = wb.sheet_by_name(sheetname)
+            lists = Xlsform.get_column(choices, constants.LIST_NAME)
+            names = Xlsform.get_column(choices, constants.NAME)
+
+            d = {}
+            for i, tup in enumerate(zip(lists, names)):
+                if i == 0:
+                    continue
+                l, n = tup
+                print tup
+                if l in d:
+                    if n in d[l]:
+                        dups.append((i, l, n))
+                    else:
+                        d[l].add(n)
+                else:
+                    d[l] = {n}
+        except xlrd.XLRDError:
+            # sheet not found
+            pass
+        except ValueError:
+            # list_name, name not found
+            pass
+        return dups
 
     @staticmethod
     def find_unused_lists(wb):
         pass
 
     @staticmethod
-    def undefined_cols(wb, sheet):
+    def check_languages(wb):
+        pass
+
+    @staticmethod
+    def find_missing_translations(wb):
+        pass
+
+    @staticmethod
+    def undefined_cols(wb, sheetname):
+        """Return a list of columns that have values without a heading
+
+        Args:
+            wb: An `xlrd` Workbook instance
+            sheetname (str): The name of the sheet to search for
+
+        Returns:
+            A list of Excel column names if anything is found, otherwise an 
+            empty list.
+        """
         try:
-            survey = wb.sheet_by_name(sheet)
+            survey = wb.sheet_by_name(sheetname)
             headers = survey.row_values(0)
             blank = [i for i, val in enumerate(headers) if val == u'']
             headless = []
@@ -184,7 +254,7 @@ class Xlsform:
             col_names = [Xlsform.number_to_excel_column(c) for c in headless]
             return col_names
         except (xlrd.XLRDError, IndexError):
-            # No survey found, nothing in survey
+            # No sheet found, nothing in sheet
             return []
 
     @staticmethod
@@ -456,13 +526,24 @@ class Xlsform:
 
     @staticmethod
     def number_to_excel_column(col):
+        """Convert a zero-indexed column number to Excel column name
+
+        Args:
+            col (int): The column number, e.g. from a Worksheet. Should be 
+                zero-indexed
+
+        Returns:
+            str: The Excel column name
+
+        Raises:
+            ValueError: If col > 26*26 or col < 0
+        """
         letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        if len(letters) * len(letters) < col:
+        if len(letters) * len(letters) < col or col < 0:
             raise ValueError(col)
-        remainder = col % len(letters)
-        primary_letter = letters[remainder]
-        quotient = col // len(letters)
-        if quotient > 0:
-            return letters[quotient - 1] + primary_letter
+        d, m = divmod(col, len(letters))
+        primary_letter = letters[m]
+        if d > 0:
+            return letters[d - 1] + primary_letter
         else:
             return primary_letter
