@@ -85,7 +85,26 @@ class XlsformTest(unittest.TestCase):
             msg = u'With {}, expected {}, found {}'.format(f, a, b)
             self.assertEqual(a, b, msg=msg)
 
-
+    def test_language_consistency(self):
+        """Test language detection in forms"""
+        bfr3 = {u'English', u'Fran\xe7ais', u'Moore', u'Gourmantchema', 
+                u'Fulfulde', u'Dioula'}
+        file_names = {
+            u'BFR3-Female-Questionnaire-v11-jkp.xlsx' : {
+                u'survey': {u'label': bfr3, u'hint': bfr3,
+                    u'constraint_message': bfr3, u'image': bfr3},
+                u'choices': {u'label': bfr3},
+                u'external_choices': {}
+            }
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.check_languages(wb)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
+            
     def test_get_identifiers(self):
         """Test file names and PMA naming conventions"""
         file_names = {

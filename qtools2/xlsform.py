@@ -274,7 +274,124 @@ class Xlsform:
 
     @staticmethod
     def check_languages(wb):
+        """Check for language consistency throughout the questionnaire
+        
+        Args:
+            wb: An `xlrd` Workbook instance
+
+        Return:
+            A list of (str) errors discovered, empty list if nothing found.
+
+        """
+        SURVEY_TRANSLATIONS = (
+            u'label',
+            u'hint',
+            u'constraint_message',
+            u'required_message',
+            u'audio',
+            u'video',
+            u'image'
+        )
+
+        CHOICES_TRANSLATIONS = (
+            u'label',
+            u'audio',
+            u'video',
+            u'image'
+        )
+
+        def get_language(s):
+            """Return the language assigned to a column
+
+            Args:
+                s: (str) The header under inspection from the header row
+
+            Return:
+                Returns whatever comes after '::' if it exists or None if 
+                '::' is not found.
+            """
+            this_language = None
+            if '::' in s:
+                this_language = s.split('::', 1)[1]
+            return this_language
+
+        d_survey = {}
+        try:
+            survey = wb.sheet_by_name(constants.SURVEY)
+            headers = survey.row_values(0)
+            for h in headers:
+                if not isinstance(h, unicode):
+                    continue
+                for t in SURVEY_TRANSLATIONS:
+                    if h.startswith(t):
+                        this_language = get_language(h)
+                        if t in d_survey:
+                            d_survey[t].add(this_language)
+                        else:
+                            d_survey[t] = {this_language}
+        except (xlrd.XLRDError): 
+            # sheet not found
+            pass
+
+        d_choices = {}
+        try:
+            choices = wb.sheet_by_name(constants.CHOICES)
+            headers = choices.row_values(0)
+            for h in headers:
+                if not isinstance(h, unicode):
+                    continue
+                for t in CHOICES_TRANSLATIONS:
+                    if h.startswith(t):
+                        this_language = get_language(h)
+                        if t in d_choices:
+                            d_choices[t].add(this_language)
+                        else:
+                            d_choices[t] = {this_language}
+        except (xlrd.XLRDError): 
+            # sheet not found
+            pass
+
+        d_external = {}
+        try:
+            external = wb.sheet_by_name(constants.EXTERNAL_CHOICES)
+            headers = external.row_values(0)
+            for h in headers:
+                if not isinstance(h, unicode):
+                    continue
+                for t in CHOICES_TRANSLATIONS:
+                    if h.startswith(t):
+                        this_language = get_language(h)
+                        if t in d_external:
+                            d_external[t].add(this_language)
+                        else:
+                            d_external[t] = {this_language}
+        except (xlrd.XLRDError): 
+            # sheet not found
+            pass
+
+        big_d = {
+            constants.SURVEY: d_survey,
+            constants.CHOICES: d_choices,
+            constants.EXTERNAL_CHOICES: d_external
+        }
+        return big_d
+
+
+
+    def format_translation_consistency(self):
         pass
+        # messages = []
+        # if d_survey:
+        #     for i, k in enumerate(d_survey):
+        #         if i == 0:
+        #             prev = k
+        #             continue
+        #         old = d_survey[prev]
+        #         new = d_survey[k]
+        #         if old - new:
+        #             m = 'In "survey" element '
+
+                    
 
     @staticmethod
     def find_missing_translations(wb):
@@ -547,6 +664,7 @@ class Xlsform:
             raise XlsformError(m)
 
     def undefined_columns_report(self):
+        # TODO convert columns from numbers to letters
         messages = []
         if self.survey_blanks:
             cols = u', '.join(self.survey_blanks)
