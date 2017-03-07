@@ -62,10 +62,9 @@ class XlsformTest(unittest.TestCase):
                     (6, u'middle_list', u'top')
             ]
         }
-
         for f in file_names:
             wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
-            found = Xlsform.find_name_dups(wb, constants)
+            found = Xlsform.find_name_dups(wb, constants.CHOICES)
             for a, b in itertools.izip_longest(file_names[f], found):
                 msg = u'With {}, expected {}, found {}'.format(f, a, b)
                 self.assertTrue(a == b, msg=msg)
@@ -74,12 +73,21 @@ class XlsformTest(unittest.TestCase):
         """Alert when a choice list is not used in the form"""
 
         file_names = {
-            u'choices_unused_list.xlsx': {u'unused_list'}
+                u'choices_unused_list.xlsx': {
+                    u'choices': set([u'unused_list'])
+                }
         }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_unused_lists(wb)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
 
 
-        def test_get_identifiers(self):
-            """Test file names and PMA naming conventions"""
+    def test_get_identifiers(self):
+        """Test file names and PMA naming conventions"""
         file_names = {
             u'CIR3-Household-Questionnaire-v21-jkp.xlsx' :
                 (u'Household-Questionnaire', u'CI', u'3', u'v21'),
@@ -104,16 +112,16 @@ class XlsformTest(unittest.TestCase):
         file_list = {
             # Filename => survey, choices, external chioces, settings
             u'settings-staggered-bottom1.xlsx' : [
-                [], [], [], ['C', 'D']
+                [], [], [], [2, 3]
             ],
             u'headerless-1.xlsx': [
-                ['Z', 'AA'], ['J'], ['F'], ['M']
+                [25, 26], [9], [5], [12]
             ],
             u'headerless-2.xlsx': [
-                ['E'], ['J', 'K', 'L', 'M'], [], ['C']
+                [4], [9, 10, 11, 12], [], [2]
             ],
             u'headerless-3.xlsx' : [
-                ['E'], ['F', 'G', 'I'], [], []
+                [4], [5, 6, 8], [], []
             ]
         }
 

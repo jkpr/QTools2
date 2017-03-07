@@ -195,13 +195,11 @@ class Xlsform:
             choices = wb.sheet_by_name(sheetname)
             lists = Xlsform.get_column(choices, constants.LIST_NAME)
             names = Xlsform.get_column(choices, constants.NAME)
-
             d = {}
             for i, tup in enumerate(zip(lists, names)):
                 if i == 0:
                     continue
                 l, n = tup
-                print tup
                 if l in d:
                     if n in d[l]:
                         dups.append((i, l, n))
@@ -219,7 +217,60 @@ class Xlsform:
 
     @staticmethod
     def find_unused_lists(wb):
-        pass
+        """Get the names of unused lists
+
+        Args:
+            wb: An `xlrd` Workbook instance
+
+        Return:
+            A dictionary with keys 'choices' and 'external_choices' and 
+            values as the (str) list names that are unused. Keys exist only 
+            if missing list names are found.
+        """
+        d = {}
+        choice_lists = set()
+        try:
+            choices = wb.sheet_by_name(constants.CHOICES)
+            lists = Xlsform.get_column(choices, constants.LIST_NAME)[1:]
+            choice_lists = set(lists)
+        except (xlrd.XLRDError, ValueError, IndexError):
+            # sheet not found, list_name not found, not more than first row
+            pass
+        
+        external_lists = set()
+        try:
+            external = wb.sheet_by_name(constants.EXTERNAL_CHOICES)
+            lists = Xlsform.get_column(external, constants.LIST_NAME)[1:]
+            external_lists = set(lists)
+        except (xlrd.XLRDError, ValueError, IndexError):
+            # sheet not found, list_name not found, not more than first row
+            pass
+        
+        try:
+            survey = wb.sheet_by_name(constants.SURVEY)
+            types = Xlsform.get_column(survey, constants.TYPE)
+            for i, item in enumerate(types):
+                so = u'select_one '
+                sm = u'select_multiple '
+                from_choices = item.startswith(so) or item.startswith(sm)
+                soe = u'select_one_external '
+                sme = u'select_multiple_external '
+                from_external = item.startswith(soe) or item.startswith(sme)
+                if from_choices:
+                    list_name = item.split(None, 1)[1]
+                    choice_lists.discard(list_name)
+                elif from_external:
+                    list_name = item.split(None, 1)[1]
+                    external_lists.discard(list_name)
+        except (xlrd.XLRDError, ValueError):
+            # sheet not found, type not found
+            pass
+
+        if choice_lists:
+            d[u'choices'] = choice_lists
+        if external_lists:
+            d[u'external_choices'] = external_lists
+        return d
 
     @staticmethod
     def check_languages(wb):
@@ -238,8 +289,7 @@ class Xlsform:
             sheetname (str): The name of the sheet to search for
 
         Returns:
-            A list of Excel column names if anything is found, otherwise an 
-            empty list.
+            A sorted list of (int) columns that have values without headers
         """
         try:
             survey = wb.sheet_by_name(sheetname)
@@ -251,8 +301,7 @@ class Xlsform:
                 found = filter(None, full_column)
                 if found:
                     headless.append(col)
-            col_names = [Xlsform.number_to_excel_column(c) for c in headless]
-            return col_names
+            return headless
         except (xlrd.XLRDError, IndexError):
             # No sheet found, nothing in sheet
             return []
