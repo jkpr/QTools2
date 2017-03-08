@@ -64,18 +64,20 @@ class Xlsform:
                                               constants.DELETE_FORM)
         self.linking_consistency(self.path, self.save_instance, self.save_form)
         self.survey_blanks = self.undefined_cols(wb, constants.SURVEY)
+        self.unused_lists = self.find_unused_lists(wb)
             
         # Choices
         self.choices_blanks = self.undefined_cols(wb, constants.CHOICES)
-        self.multiple_lists = self.find_multiple_lists(wb, constants.CHOICES)
+        self.choices_multiple = self.find_multiple_lists(wb, constants.CHOICES)
         self.name_dups = self.find_name_dups(wb, constants.CHOICES)
-        self.unused_lists = self.find_unused_lists(wb)
 
         # External choices
         self.external_choices_consistency(self.path, wb)
         self.external_blanks = self.undefined_cols(wb,
-                                                   constants.EXTERNAL_CHOICES)
+                constants.EXTERNAL_CHOICES)
         self.external_multiple = self.find_multiple_lists(wb,
+                constants.EXTERNAL_CHOICES)
+        self.external_dups = self.find_name_dups(wb,
                 constants.EXTERNAL_CHOICES)
 
         # Settings
@@ -87,7 +89,8 @@ class Xlsform:
 
         # Language
         self.language_consistency = self.check_languages(wb)
-        self.missing_translations = self.find_missing_translations(wb)
+        self.missing_translations = self.find_missing_translations(wb,
+                self.language_consistency)
 
     def get_workbook(self):
         # IO Error if not existing
@@ -140,7 +143,7 @@ class Xlsform:
         """Find list_names that are defined in multiple places
 
         Args:
-            wb: An `xlrd` Workbook instance
+            wb: An `xlrd` Book instance
             sheetname (str): The name of the sheet to search for
 
         Returns:
@@ -180,10 +183,10 @@ class Xlsform:
     def find_name_dups(wb, sheetname):
         """Get a list of duplicate names from within common choice lists
 
-        Silenty returns empty if either "list_name" or "name" is missing.
+        Returns empty if either "list_name" or "name" is missing.
 
         Args:
-            wb: An `xlrd` Workbook instance
+            wb: An `xlrd` Book instance
             sheetname (str): The name of the sheet to search for
 
         Return:
@@ -220,7 +223,7 @@ class Xlsform:
         """Get the names of unused lists
 
         Args:
-            wb: An `xlrd` Workbook instance
+            wb: An `xlrd` Book instance
 
         Return:
             A dictionary with keys 'choices' and 'external_choices' and 
@@ -277,10 +280,20 @@ class Xlsform:
         """Check for language consistency throughout the questionnaire
         
         Args:
-            wb: An `xlrd` Workbook instance
+            wb: An `xlrd` Book instance
 
         Return:
-            A list of (str) errors discovered, empty list if nothing found.
+            A dictionary with three keys for 'survey', 'choices', and
+            'external_choices'. Their values are dictionaries, possibly empty.
+            These have keys in the bare 'label', 'hint', etc... and values as 
+            the sets of languages they are translated into. Example for a 
+            simple ODK questionnaire:
+
+            {
+                u'survey': {u'label':{None}},
+                u'choices': {},
+                u'external_choices': {}
+            }
 
         """
         SURVEY_TRANSLATIONS = (
@@ -376,33 +389,84 @@ class Xlsform:
         }
         return big_d
 
-
-
-    def format_translation_consistency(self):
-        pass
-        # messages = []
-        # if d_survey:
-        #     for i, k in enumerate(d_survey):
-        #         if i == 0:
-        #             prev = k
-        #             continue
-        #         old = d_survey[prev]
-        #         new = d_survey[k]
-        #         if old - new:
-        #             m = 'In "survey" element '
-
-                    
-
     @staticmethod
-    def find_missing_translations(wb):
-        pass
+    def find_missing_translations(wb, lang_dict=None):
+        """Get the missing translations from a questionnaire
+
+        Args:
+            wb: An `xlrd` Book instance
+
+        Return:
+            A sequence of tuples (sheetname, row, column, missing). Row and 
+            column are zero-indexed integers. Missing is a boolean, true 
+            if the translation is missing, false if the translation exists, 
+            but the default translation does not exist (usually the default 
+            is correct).
+        """
+        if not lang_dict:
+            lang_dict = self.check_languages(wb)
+        d_survey = lang_dict[constants.SURVEY]
+        d_choices = lang_dict[constants.CHOICES]
+        d_external = lang_dict[constants.EXTERNAL_CHOICES]
+
+        def translation_pairs(d):
+            for k in d:
+                langs = d[k]
+                if len(langs) > 1:
+                    if None in langs:
+                        default = k
+                        langs.remove(None)
+                    elif u'English' in langs:
+                        default = u'{}::English'.format(k)
+                        langs.remove(u'English')
+                    else:
+                        first = min(langs)
+                        default = u'{}::{}'.format(k, first)
+                        langs.remove(first)
+                    other_langs = sorted(list(langs))
+                    others = [u'{}::{}'.format(k, l) for l in other_langs]
+                    for other in others:
+                        yield default, other
+            
+        def missing_by_sheet(d, wb, sheetname):
+            missing = []
+            sheet = wb.sheet_by_name(sheetname)
+            headers = sheet.row_values(0)
+            pairs = list(translation_pairs(d))
+            pair_inds = [
+                (headers.index(a), headers.index(b)) for (a, b) in pairs
+            ]
+            for i in range(sheet.nrows):
+                if i == 0:
+                    continue
+                this_row = sheet.row_values(i)
+                for a, b in pair_inds:
+                    a_val = this_row[a]
+                    b_val = this_row[b]
+                    if a_val and not b_val:
+                        missing.append((sheetname, i, b, True))
+                    elif not a_val and b_val:
+                        missing.append((sheetname, i, b, False))
+            return missing
+
+        missing = []
+        if d_survey:
+            l = missing_by_sheet(d_survey, wb, constants.SURVEY)
+            missing.extend(l)
+        if d_choices:
+            l = missing_by_sheet(d_choices, wb, constants.CHOICES)
+            missing.extend(l)
+        if d_external:
+            l = missing_by_sheet(d_external, wb, constants.EXTERNAL_CHOICES)
+            missing.extend(l)
+        return missing
 
     @staticmethod
     def undefined_cols(wb, sheetname):
         """Return a list of columns that have values without a heading
 
         Args:
-            wb: An `xlrd` Workbook instance
+            wb: An `xlrd` Book instance
             sheetname (str): The name of the sheet to search for
 
         Returns:
@@ -663,32 +727,169 @@ class Xlsform:
             m = m.format(self.path, u', '.join(version))
             raise XlsformError(m)
 
-    def undefined_columns_report(self):
-        # TODO convert columns from numbers to letters
-        messages = []
-        if self.survey_blanks:
-            cols = u', '.join(self.survey_blanks)
-            m_survey = u'{} ({})'.format(constants.SURVEY, cols)
-            messages.append(m_survey)
-        if self.choices_blanks:
-            cols = u', '.join(self.choices_blanks)
-            m_choices = u'{} ({})'.format(constants.CHOICES, cols)
-            messages.append(m_choices)
-        if self.external_blanks:
-            cols = u', '.join(self.external_blanks)
-            m_external = u'{} ({})'.format(constants.EXTERNAL_CHOICES, cols)
-            messages.append(m_external)
-        if self.settings_blanks:
-            cols = u', '.join(self.settings_blanks)
-            m_settings = u'{} ({})'.format(constants.SETTINGS, cols)
-            messages.append(m_settings)
-        if messages:
-            m = u'Tabs in "{}" with undefined columns: {}'
-            m = m.format(self.short_file, u', '.join(messages))
-            raise XlsformError(m)
+    def extra_undefined_column(self):
+        """Return warnings about undefined (headerless) columns
 
-    def undefined_ref_report(self):
-        # TODO check that a variable does not reference a row behind it
+        Generates a list of warnings to be displayed to the user.
+
+        Creates warnings for survey, choices, external_choices, and settings.
+
+        Return:
+            A list of string, or empty if nothing to report
+        """
+        def format_message(cols, sheet):
+            excel = [self.number_to_excel_column(c) for c in cols]
+            joined = u', '.join(excel)
+            msg = u'Columns with data but without a header in {}: {}'
+            msg = msg.format(sheet, joined)
+            return msg
+
+        m = []
+        if self.survey_blanks:
+            m.append(format_message(self.survey_blanks, constants.SURVEY))
+        if self.choices_blanks:
+            m.append(format_message(self.choices_blanks, constants.CHOICES))
+        if self.external_blanks:
+            m.append(format_message(self.external_blanks, 
+                     constants.EXTERNAL_CHOICES))
+        if self.settings_blanks:
+            m.append(format_message(self.settings_blanks, constants.SETTINGS))
+        return m
+
+    def extra_undefined_ref(self):
+        """Return warnings about referencing an ODK variable before defining
+
+        Generates a list of warnings to be displayed to the user.
+        
+        Return:
+            A list of string, or empty if nothing to report
+        """
+        # TODO fix this STUB!
+        return []
+
+    def extra_multiple_choicelist(self):
+        """Return warnings about choice lists defined in multiple spots
+
+        Generates a list of warnings to be displayed to the user.
+        
+        Return:
+            A list of string, or empty if nothing to report
+        """
+        def format_message(dups, sheet):
+            at = (u'{}@{}'.format(name, row) for (name, row) in dups)
+            joined = ', '.join(at)
+            msg = u'Choice lists defined more than once in {}: {}'
+            msg = msg.formst(sheet, joined)
+            return msg
+        
+        m = []
+        if self.choices_multiple:
+            m.append(format_message(self.choices_multiple, constants.CHOICES))
+        if self.external_multiple:
+            m.append(format_message(self.external_multiple,
+                constants.EXTERNAL_CHOICES))
+        return m
+
+    def extra_unused_choicelist(self):
+        """Return warnings about unused choice lists
+
+        Generates a list of warnings to be displayed to the user.
+        
+        Return:
+            A list of string, or empty if nothing to report
+        """
+        m = []
+        for k in self.unused_lists:
+            lists = self.unused_lists[k]
+            joined = u', '.join(lists)
+            msg = u'Unused choice lists in {}: {}'.format(k, joined)
+            m.append(msg)
+        return m
+
+    def extra_same_choices(self):
+        """Warn about choices with the same name in the same choice list
+
+        Generates a list of warnings to be displayed to the user.
+        
+        Return:
+            A list of string, or empty if nothing to report
+        """
+        def format_message(dups, sheet):
+            d = {}
+            for _, listname, name in dups:
+                if listname in d: 
+                    d[listname].add(name)
+                else:
+                    d[listname] = {name}
+            keys = sorted(d.keys())
+            per_list = []
+            for k in keys:
+                joined = u', '.join(d[k])
+                m = u'{} -> ({})'.format(k, joined)
+                per_list.append(m)
+            joined = u', '.join(per_list)
+            msg = u'Choice lists with duplicate option names in {}: {}'
+            msg = msg.format(sheet, joined)
+            return msg
+                
+        m = []
+        if self.name_dups:
+            m.append(format_message(self.name_dups, constants.CHOICES))
+        if self.external_dups:
+            m.append(format_message(self.external_dups,
+                constants.EXTERNAL_CHOICES))
+        return m
+
+    def extra_missing_translation(self):
+        """Warn about missing or extraneous translations
+        
+        Generates a list of warnings to be displayed to the user.
+        
+        Return:
+            A list of string, or empty if nothing to report
+        """
+        def format_cell(seq):
+            d = {}
+            for sheet, r, c, _ in seq:
+                if sheet in d:
+                    excel_col = Xlsform.number_to_excel_column(c)
+                    excel = u'{}{}'.format(Xlsform.(excel_col, r+1)
+                    d[sheet].add(excel)
+                else:
+                    excel_col = Xlsform.number_to_excel_column(c)
+                    excel = u'{}{}'.format(Xlsform.(excel_col, r+1)
+                    d[sheet] = {excel}
+            per_sheet = []
+            for k in d:
+                v = sorted(list(d[k]))
+                joined = u', '.join(v)
+                msg = u'{} -> ({})'.format(k, joined)
+                per_sheet.append(msg)
+            return per_sheet
+
+        m = []
+        missing = (i for i in self.missing_translations if i[3])
+        missing_formatted = format_cell(missing)
+        if missing_formatted:
+            joined = u', '.join(missing_formatted)
+            msg = u'Missing translations detected: {}'.format(joined)
+            m.append(msg)
+        extraneous = (i for i in self.missing_translations if not i[3])
+        extraneous_formatted = format_cell(extraneous)
+        if extraneous_formatted:
+            joined = u', '.join(extraneous_formatted)
+            msg = u'Extraneous translations detected: {}'.format(joined)
+            m.append(msg)
+        return m
+        
+    def extra_language_conflict(self):
+        """Warn about inconsistent languages (including default language)
+
+        Generates a list of warnings to be displayed to the user.
+        
+        Return:
+            A list of string, or empty if nothing to report
+        """
         pass
 
     @staticmethod
@@ -714,3 +915,4 @@ class Xlsform:
             return letters[d - 1] + primary_letter
         else:
             return primary_letter
+

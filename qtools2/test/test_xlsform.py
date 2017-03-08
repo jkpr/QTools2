@@ -74,7 +74,11 @@ class XlsformTest(unittest.TestCase):
 
         file_names = {
                 u'choices_unused_list.xlsx': {
-                    u'choices': set([u'unused_list'])
+                    u'choices': {u'unused_list'}
+                },
+                u'choices_unused_list2.xlsx': {
+                    u'choices': {u'unused_list'},
+                    u'external_choices': {u'my_list', u'your_list'}
                 }
         }
         for f in file_names:
@@ -100,6 +104,22 @@ class XlsformTest(unittest.TestCase):
         for f in file_names:
             wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
             found = Xlsform.check_languages(wb)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
+
+    def test_find_missing_translations(self):
+        """Detect missing and extraneous translations"""
+        file_names = {
+            u'NER1-missing-translations.xlsx': [
+                (u'survey', 2, 16, True),
+                (u'survey', 3, 18, False)
+            ]
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_missing_translations(wb)
             a = file_names[f]
             b = found
             msg = u'With {}, expected {}, found {}'.format(f, a, b)
