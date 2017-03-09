@@ -33,7 +33,7 @@ class XlsformTest(unittest.TestCase):
     FORM_DIR = u'qtools2/test/forms'
 
     def test_hq_fq_required_linking_columns(self):
-        """-> Test HQ has save_instance, save_form and FQ has delete_form"""
+        """Test HQ has save_instance, save_form and FQ has delete_form"""
 
         # ------------------- PART 1 ------------------ #
         good_hq_file_list = [

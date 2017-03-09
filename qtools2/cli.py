@@ -27,7 +27,7 @@
 
 Author: James K. Pringle
 E-mail: jpringle@jhu.edu
-Last-modified: 11 November 2016
+Last-modified: 9 March 2017
 """
 
 import argparse
@@ -66,9 +66,8 @@ def command_line_interface():
     parser.add_argument('-l', '--linking_warn', action='store_true',
                         help=linking_warn_help)
 
-    extras_help = ('Perform extra checks on (1) data in undefined columns and '
-                   '(2) out of order variable references.')
-    parser.add_argument('-e', '--extras', action='store_true', help=extras_help)
+    extras_help = 'Do not perform extra checks'
+    parser.add_argument('-E', '--no_extras', action='store_true', help=extras_help)
 
     noval_help = 'Do not validate XML output with ODK Validate.'
     parser.add_argument('-n', '--no_validate', action='store_true',
@@ -97,6 +96,7 @@ def command_line_interface():
     pma = not args.regular
     strict_linking = not args.linking_warn
     validate = not args.no_validate
+    extras = not args.no_extras
 
     kwargs = {
         constants.SUFFIX: suffix,
@@ -105,7 +105,7 @@ def command_line_interface():
         constants.CHECK_VERSIONING: check_versioning,
         constants.STRICT_LINKING: strict_linking,
         constants.VALIDATE: validate,
-        constants.EXTRAS: args.extras,
+        constants.EXTRAS: extras,
         constants.DEBUG: args.debug
     }
 

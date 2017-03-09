@@ -404,7 +404,7 @@ class Xlsform:
             is correct).
         """
         if not lang_dict:
-            lang_dict = self.check_languages(wb)
+            lang_dict = Xlsform.check_languages(wb)
         d_survey = lang_dict[constants.SURVEY]
         d_choices = lang_dict[constants.CHOICES]
         d_external = lang_dict[constants.EXTERNAL_CHOICES]
@@ -740,7 +740,7 @@ class Xlsform:
         def format_message(cols, sheet):
             excel = [self.number_to_excel_column(c) for c in cols]
             joined = u', '.join(excel)
-            msg = u'Columns with data but without a header in {}: {}'
+            msg = u'Columns with data but without a header in "{}": {}'
             msg = msg.format(sheet, joined)
             return msg
 
@@ -776,10 +776,10 @@ class Xlsform:
             A list of string, or empty if nothing to report
         """
         def format_message(dups, sheet):
-            at = (u'{}@{}'.format(name, row) for (name, row) in dups)
+            at = (u'{}@{}'.format(name, row + 1) for (row, name) in dups)
             joined = ', '.join(at)
-            msg = u'Choice lists defined more than once in {}: {}'
-            msg = msg.formst(sheet, joined)
+            msg = u'Choice lists defined more than once in "{}": {}'
+            msg = msg.format(sheet, joined)
             return msg
         
         m = []
@@ -802,7 +802,7 @@ class Xlsform:
         for k in self.unused_lists:
             lists = self.unused_lists[k]
             joined = u', '.join(lists)
-            msg = u'Unused choice lists in {}: {}'.format(k, joined)
+            msg = u'Unused choice lists in "{}": {}'.format(k, joined)
             m.append(msg)
         return m
 
@@ -853,11 +853,11 @@ class Xlsform:
             for sheet, r, c, _ in seq:
                 if sheet in d:
                     excel_col = Xlsform.number_to_excel_column(c)
-                    excel = u'{}{}'.format(Xlsform.(excel_col, r+1)
+                    excel = u'{}{}'.format(excel_col, r+1)
                     d[sheet].add(excel)
                 else:
                     excel_col = Xlsform.number_to_excel_column(c)
-                    excel = u'{}{}'.format(Xlsform.(excel_col, r+1)
+                    excel = u'{}{}'.format(excel_col, r+1)
                     d[sheet] = {excel}
             per_sheet = []
             for k in d:
@@ -886,11 +886,40 @@ class Xlsform:
         """Warn about inconsistent languages (including default language)
 
         Generates a list of warnings to be displayed to the user.
+
+        There are two parts. First, there are checks that the languages for 
+        each survey element are consistent, e.g. that "label" has all the 
+        same languages as "hint". If the first passes, then the second check 
+        is that the default language matches one of the languages used.
         
         Return:
             A list of string, or empty if nothing to report
         """
-        pass
+        m = []
+        found = set()
+        previous = None
+        mismatch = None
+        for sheet in self.language_consistency:
+            d_sheet = self.language_consistency[sheet]
+            for elem in d_sheet:
+                langs = d_sheet[elem]
+                if not found:
+                    found = langs
+                elif found != langs and not mismatch:
+                    found |= langs
+                    mismatch = (previous, elem)
+                previous = elem
+        if mismatch:
+            joined = u', '.join(sorted(list(found)))
+            msg = (u'Languages not consistent. Triggered by "{}" and "{}". '
+                   u'Languages found: {}')
+            msg = msg.format(mismatch[0], mismatch[1], joined)
+            m.append(msg)
+        default = self.settings.get(u'default_language', None)
+        if default and default not in found:
+            msg = u'Default language "{}" not used'.format(default)
+            m.append(msg) 
+        return m
 
     @staticmethod
     def number_to_excel_column(col):

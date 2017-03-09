@@ -45,7 +45,7 @@ Examples:
         $ python -m qtools2.convert -h
 
 Created: 27 April 2016
-Last modified: 23 August 2016
+Last modified: 9 March 2017
 """
 
 import os
@@ -72,7 +72,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
     check_versioning = kwargs.get(constants.CHECK_VERSIONING, True)
     strict_linking = kwargs.get(constants.STRICT_LINKING, True)
     validate = kwargs.get(constants.VALIDATE, True)
-    extras = kwargs.get(constants.EXTRAS, False)
+    extras = kwargs.get(constants.EXTRAS, True)
     debug = kwargs.get(constants.DEBUG, False)
 
     xlsforms = []
@@ -87,9 +87,6 @@ def xlsform_convert(xlsxfiles, **kwargs):
             xlsforms.append(xlsform)
             if check_versioning:
                 xlsform.version_consistency()
-            if extras:
-                xlsform.undefined_columns_report()
-                xlsform.undefined_ref_report()
         except XlsformError as e:
             error.append(str(e))
         except IOError:
@@ -128,7 +125,7 @@ def xlsform_convert(xlsxfiles, **kwargs):
         remove_all_successes(successes, xlsforms)
 
 
-def xlsform_offline(xlsform, validate=True):
+def xlsform_offline(xlsform, validate=True, extras=True):
     try:
         warnings = xlsform.xlsform_convert(validate=validate)
         if warnings:
@@ -142,6 +139,19 @@ def xlsform_offline(xlsform, validate=True):
             footer = u'  End PyXForm for "%s"  '
             footer %= xlsform.path
             print footer.center(len(m), u'#') + u'\n'
+        if extras:
+            msg = []
+            msg.extend(xlsform.extra_undefined_column())
+            msg.extend(xlsform.extra_undefined_ref())
+            msg.extend(xlsform.extra_multiple_choicelist())
+            msg.extend(xlsform.extra_unused_choicelist())
+            msg.extend(xlsform.extra_same_choices())
+            msg.extend(xlsform.extra_missing_translation())
+            msg.extend(xlsform.extra_language_conflict())
+            if msg:
+                title = u'Qtools2 extra warnings for {}'
+                title = title.format(xlsform.path)
+                format_and_warn(title, msg)
     except PyXFormError as e:
         m = u'### PyXForm ERROR converting "%s" to XML! ###'
         m %= xlsform.path
