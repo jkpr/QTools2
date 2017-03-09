@@ -1,3 +1,14 @@
+v0.2.4b, 9 March 2017
+ * Many new extra checks for better accuracy. Check for:
+ * --> Columns with data and no headers
+ * --> Choice lists defined more than once
+ * --> Unused choice lists
+ * --> Choice lists with options that have the same "name"
+ * --> Missing and extraneous translations
+ * --> Language consistency
+ * GUI bugfix for Windows
+ * Some new documentation and some new unit tests
+
 v0.2.3, 11 November 2016
  * Much enhanced GUI
  * Removed cruft
