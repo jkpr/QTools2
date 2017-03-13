@@ -144,6 +144,22 @@ class XlsformTest(unittest.TestCase):
             msg = u'With "{}", found {}'.format(f, u', '.join(identifiers))
             self.assertTrue(identifiers == answer, msg=msg)
 
+    def test_non_ascii(self):
+        """Ensure choice names are only standard letters/symbols"""
+        file_names = {
+            u'nonascii1.xlsx': [
+                (3, 123.0),
+                (4, u'wer asd w ')
+            ]
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_non_ascii(wb, constants.CHOICES)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
+
     def test_undefined_columns(self):
         """Test files with/without header-less columns (stray cells)"""
 

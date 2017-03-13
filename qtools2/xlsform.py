@@ -70,6 +70,7 @@ class Xlsform:
         self.choices_blanks = self.undefined_cols(wb, constants.CHOICES)
         self.choices_multiple = self.find_multiple_lists(wb, constants.CHOICES)
         self.name_dups = self.find_name_dups(wb, constants.CHOICES)
+        self.choices_ascii = self.find_non_ascii(wb, constants.CHOICES)
 
         # External choices
         self.external_choices_consistency(self.path, wb)
@@ -78,6 +79,8 @@ class Xlsform:
         self.external_multiple = self.find_multiple_lists(wb,
                 constants.EXTERNAL_CHOICES)
         self.external_dups = self.find_name_dups(wb,
+                constants.EXTERNAL_CHOICES)
+        self.external_ascii = self.find_non_ascii(wb,
                 constants.EXTERNAL_CHOICES)
 
         # Settings
@@ -203,7 +206,7 @@ class Xlsform:
                 if i == 0:
                     continue
                 l, n = tup
-                if l in d:
+                if l and l in d:
                     if n in d[l]:
                         dups.append((i, l, n))
                     else:
@@ -235,7 +238,7 @@ class Xlsform:
         try:
             choices = wb.sheet_by_name(constants.CHOICES)
             lists = Xlsform.get_column(choices, constants.LIST_NAME)[1:]
-            choice_lists = set(lists)
+            choice_lists = set(filter(None, lists))
         except (xlrd.XLRDError, ValueError, IndexError):
             # sheet not found, list_name not found, not more than first row
             pass
@@ -244,7 +247,7 @@ class Xlsform:
         try:
             external = wb.sheet_by_name(constants.EXTERNAL_CHOICES)
             lists = Xlsform.get_column(external, constants.LIST_NAME)[1:]
-            external_lists = set(lists)
+            external_lists = set(filter(None, lists))
         except (xlrd.XLRDError, ValueError, IndexError):
             # sheet not found, list_name not found, not more than first row
             pass
@@ -274,6 +277,36 @@ class Xlsform:
         if external_lists:
             d[u'external_choices'] = external_lists
         return d
+
+    @staticmethod
+    def find_non_ascii(wb, sheetname):
+        """Get ODK choice names with improper names
+
+        Args:
+            wb: An `xlrd` Book instance
+            sheetname (str): The name of the sheet to search
+
+        Return:
+            A list of tuples. The first value of the tuple is the row name. The
+            second value is the ODK choice name found.
+        """
+        TAG_START_CHAR = r'[a-zA-Z:_]'
+        TAG_CHAR = r'[a-zA-Z:_0-9\-.]'
+        NAME_REGEX = '^({}{}*)?$'.format(TAG_START_CHAR, TAG_CHAR)
+
+        nonascii = []
+        try:
+            choices = wb.sheet_by_name(sheetname)
+            names = Xlsform.get_column(choices, constants.NAME)
+            for i, name in enumerate(names):
+                if i == 0:
+                    continue
+                found = re.match(NAME_REGEX, str(name).strip())
+                if not found:
+                    nonascii.append((i, name))
+        except (xlrd.XLRDError, ValueError):
+            pass # Found nothing
+        return nonascii
 
     @staticmethod
     def check_languages(wb):
@@ -920,6 +953,27 @@ class Xlsform:
         if default and default not in found:
             msg = u'Default language "{}" not used'.format(default)
             m.append(msg) 
+        return m
+
+    def extra_nonascii(self):
+        """List choice names that have non-ascii characters
+
+        Return:
+            A list of tuples of (int, value), the row number and the value 
+            found in the row.
+        """
+        m = []
+        msg = u'In "{}" tab, found malformed "names": {}'
+        if self.choices_ascii:
+            all_choices = (u'"{}"@{}'.format(i[1], i[0] + 1) for i in 
+                    self.choices_ascii)
+            joined = u', '.join(all_choices)
+            m.append(msg.format(constants.CHOICES, joined))
+        if self.external_ascii:
+            all_external = (u'"{}"@{}'.format(i[1], i[0] + 1) for i in 
+                    self.external_ascii)
+            joined = u', '.join(all_external)
+            m.append(msg.format(constants.EXTERNAL_CHOICES, joined))
         return m
 
     @staticmethod
