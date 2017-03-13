@@ -905,12 +905,13 @@ class Xlsform:
                 langs = d_sheet[elem]
                 if not found:
                     found = langs
-                elif found != langs and not mismatch:
+                elif found != langs:
                     found |= langs
-                    mismatch = (previous, elem)
+                    if not mismatch:
+                        mismatch = (previous, elem)
                 previous = elem
         if mismatch:
-            joined = u', '.join(sorted(list(found)))
+            joined = u', '.join(sorted([str(i) for i in found]))
             msg = (u'Languages not consistent. Triggered by "{}" and "{}". '
                    u'Languages found: {}')
             msg = msg.format(mismatch[0], mismatch[1], joined)
