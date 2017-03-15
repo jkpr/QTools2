@@ -290,16 +290,17 @@ class Xlsform:
             A list of tuples. The first value of the tuple is the row name. The
             second value is the ODK choice name found.
         """
-        TAG_START_CHAR = r'[a-zA-Z:_]'
-        TAG_CHAR = r'[a-zA-Z:_0-9\-.]'
-        NAME_REGEX = '^({}{}*)?$'.format(TAG_START_CHAR, TAG_CHAR)
+        NUMBER = r'-?\d+(\.\d+)?'
+        TAG_START_CHAR = r'[a-zA-Z_]'
+        TAG_CHAR = r'[a-zA-Z_0-9\-]'
+        NAME_REGEX = '^{}|({}{}*)$'.format(NUMBER, TAG_START_CHAR, TAG_CHAR)
 
         nonascii = []
         try:
             choices = wb.sheet_by_name(sheetname)
             names = Xlsform.get_column(choices, constants.NAME)
             for i, name in enumerate(names):
-                if i == 0:
+                if i == 0 or str(name).strip() == '':
                     continue
                 found = re.match(NAME_REGEX, str(name).strip())
                 if not found:

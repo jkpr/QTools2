@@ -148,7 +148,6 @@ class XlsformTest(unittest.TestCase):
         """Ensure choice names are only standard letters/symbols"""
         file_names = {
             u'nonascii1.xlsx': [
-                (3, 123.0),
                 (4, u'wer asd w ')
             ]
         }
