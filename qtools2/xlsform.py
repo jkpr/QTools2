@@ -293,7 +293,7 @@ class Xlsform:
         NUMBER = r'-?\d+(\.\d+)?'
         TAG_START_CHAR = r'[a-zA-Z_]'
         TAG_CHAR = r'[a-zA-Z_0-9\-]'
-        NAME_REGEX = '^{}|({}{}*)$'.format(NUMBER, TAG_START_CHAR, TAG_CHAR)
+        NAME_REGEX = '^({})|({}{}*)$'.format(NUMBER, TAG_START_CHAR, TAG_CHAR)
 
         nonascii = []
         try:
