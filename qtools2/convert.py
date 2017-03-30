@@ -174,6 +174,7 @@ def xlsform_offline(xlsform, validate=True, extras=True):
     except Exception as e:
         print u'### Unexpected error: %s' % repr(e)
         # Remove output file if there is an error with ODKValidate
+        traceback.print_exc()
         if os.path.exists(xlsform.outpath):
             print u'### Deleting "%s"' % xlsform.outpath
             xlsform.cleanup()
