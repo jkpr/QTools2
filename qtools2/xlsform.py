@@ -447,7 +447,7 @@ class Xlsform:
 
         def translation_pairs(d):
             for k in d:
-                langs = d[k]
+                langs = set(d[k])   # Work with a copy of the set
                 if len(langs) > 1:
                     if None in langs:
                         default = k
@@ -949,7 +949,7 @@ class Xlsform:
         if mismatch:
             joined = u', '.join(sorted([str(i) for i in found]))
             msg = (u'Languages not consistent. Triggered by "{}" and "{}". '
-                   u'Languages found: {}')
+                   u'All languages found: {}')
             msg = msg.format(mismatch[0], mismatch[1], joined)
             m.append(msg)
         default = self.settings.get(u'default_language', None)
