@@ -12,7 +12,7 @@ The code is necessarily written for Python 2 because it depends on a fork of the
 
 QTools2 relies on Python 2 for core functionality and Java for ODKValidate. The steps to install are
 
-* Install the most recent version of [Java][2] (currently 1.8). Either the JRE or JDK should work.
+* Install the most recent version of [Java][2] (currently 1.8). ~~Either the JRE or JDK should work.~~ Only the JDK worked when last tested on Mac (March 2017).
 * Install [Python 2.7][3]. 
 
 Note: the author uses [Homebrew][4] for Python installation on Mac.
@@ -43,6 +43,8 @@ Second,
 ```
 pip install https://github.com/jkpr/QTools2/zipball/master
 ```
+
+For the latest and greatest, replace `master` in the URLs above with `develop`.
 
 # Usage
 
@@ -106,6 +108,7 @@ NOTE: Windows users start with the _**Windows-specifc steps**_ section. To insta
 pip install https://github.com/jkpr/QTools2/zipball/master --upgrade
 ```
 
+For the latest and greatest, replace `master` in the URLs above with `develop`.
 
 ### Suggestions and Gotchas
 
@@ -117,6 +120,8 @@ pip install https://github.com/jkpr/QTools2/zipball/master --upgrade
 - Another executable for `pip` is `pip2`.
 - The most recent Java is not required, but successful tests have only been run with Java 1.6 through Java 1.8.
 - A dependency of `pmaxform` is `lxml`, which can cause problems on Mac. If there are problems, the best guide is on [StackOverflow][8].
+- During installation of `pmaxform` on Mac, the user may be prompted to install Xcode's Command Line Tools. This should be enough for `lxml`.
+- Qtools2 may run without Java. Java is only needed for ODK Validate, which can be bypassed by using the "No validate" option.
 
 [8]: http://stackoverflow.com/questions/19548011/cannot-install-lxml-on-mac-os-x-10-9
 

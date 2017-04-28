@@ -22,9 +22,11 @@
 
 import unittest
 import os.path
+import itertools
 
 import xlrd
 
+from qtools2 import constants
 from qtools2.xlsform import Xlsform
 from qtools2.errors import XlsformError
 
@@ -37,8 +39,94 @@ class XlsformTest(unittest.TestCase):
 
     FORM_DIR = u'qtools2/test/forms'
 
+    def test_multiple_choicelist(self):
+        """Alert when there are two separate choice lists of the same name"""
+
+        file_names = {
+            u'choices_two_spots.xlsx': [(6, u'y_n_list')]
+        }
+
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_multiple_lists(wb, constants.CHOICES)
+            for a, b in itertools.izip_longest(file_names[f], found):
+                msg = u'With {}, expected {}, found {}'.format(f, a, b)
+                self.assertTrue(a == b, msg=msg)
+
+    def test_duplicate_choicename(self):
+        """Alert when a choice list has multiple options with the same
+        name"""
+
+        file_names = {
+            u'choices_dup_names.xlsx': [
+                    (6, u'middle_list', u'top')
+            ]
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_name_dups(wb, constants.CHOICES)
+            for a, b in itertools.izip_longest(file_names[f], found):
+                msg = u'With {}, expected {}, found {}'.format(f, a, b)
+                self.assertTrue(a == b, msg=msg)
+
+    def test_unused_choicelist(self):
+        """Alert when a choice list is not used in the form"""
+
+        file_names = {
+                u'choices_unused_list.xlsx': {
+                    u'choices': {u'unused_list'}
+                },
+                u'choices_unused_list2.xlsx': {
+                    u'choices': {u'unused_list'},
+                    u'external_choices': {u'my_list', u'your_list'}
+                }
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_unused_lists(wb)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
+
+    def test_language_consistency(self):
+        """Test language detection in forms"""
+        bfr3 = {u'English', u'Fran\xe7ais', u'Moore', u'Gourmantchema', 
+                u'Fulfulde', u'Dioula'}
+        file_names = {
+            u'BFR3-Female-Questionnaire-v11-jkp.xlsx' : {
+                u'survey': {u'label': bfr3, u'hint': bfr3,
+                    u'constraint_message': bfr3, u'image': bfr3},
+                u'choices': {u'label': bfr3},
+                u'external_choices': {}
+            }
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.check_languages(wb)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
+
+    def test_find_missing_translations(self):
+        """Detect missing and extraneous translations"""
+        file_names = {
+            u'NER1-missing-translations.xlsx': [
+                (u'survey', 2, 16, True),
+                (u'survey', 3, 18, False)
+            ]
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_missing_translations(wb)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
+            
     def test_get_identifiers(self):
-        """-> Test file names and PMA naming conventions"""
+        """Test file names and PMA naming conventions"""
         file_names = {
             u'CIR3-Household-Questionnaire-v21-jkp.xlsx' :
                 (u'Household-Questionnaire', u'CI', u'3', u'v21'),
@@ -56,23 +144,38 @@ class XlsformTest(unittest.TestCase):
             msg = u'With "{}", found {}'.format(f, u', '.join(identifiers))
             self.assertTrue(identifiers == answer, msg=msg)
 
+    def test_non_ascii(self):
+        """Ensure choice names are only standard letters/symbols"""
+        file_names = {
+            u'nonascii1.xlsx': [
+                (4, u'wer asd w ')
+            ]
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_non_ascii(wb, constants.CHOICES)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
+
     def test_undefined_columns(self):
-        """-> Test files with/without header-less columns (stray cells)"""
+        """Test files with/without header-less columns (stray cells)"""
 
         # ------------------- PART 1 ------------------ #
         file_list = {
             # Filename => survey, choices, external chioces, settings
             u'settings-staggered-bottom1.xlsx' : [
-                [], [], [], ['C', 'D']
+                [], [], [], [2, 3]
             ],
             u'headerless-1.xlsx': [
-                ['Z', 'AA'], ['J'], ['F'], ['M']
+                [25, 26], [9], [5], [12]
             ],
             u'headerless-2.xlsx': [
-                ['E'], ['J', 'K', 'L', 'M'], [], ['C']
+                [4], [9, 10, 11, 12], [], [2]
             ],
             u'headerless-3.xlsx' : [
-                ['E'], ['F', 'G', 'I'], [], []
+                [4], [5, 6, 8], [], []
             ]
         }
 

@@ -11,3 +11,5 @@ qtools2/test/confidential
 qtools2/test/config/
 dev
 build
+tags
+*.swp
