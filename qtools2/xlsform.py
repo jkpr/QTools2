@@ -300,9 +300,9 @@ class Xlsform:
             choices = wb.sheet_by_name(sheetname)
             names = Xlsform.get_column(choices, constants.NAME)
             for i, name in enumerate(names):
-                if i == 0 or str(name).strip() == '':
+                if i == 0 or unicode(name).strip() == u'':
                     continue
-                found = re.match(NAME_REGEX, str(name).strip())
+                found = re.match(NAME_REGEX, unicode(name).strip())
                 if not found:
                     nonascii.append((i, name))
         except (xlrd.XLRDError, ValueError):
@@ -860,7 +860,7 @@ class Xlsform:
             keys = sorted(d.keys())
             per_list = []
             for k in keys:
-                joined = u', '.join(str(s) for s in d[k])
+                joined = u', '.join(unicode(s) for s in d[k])
                 m = u'{} -> ({})'.format(k, joined)
                 per_list.append(m)
             joined = u', '.join(per_list)
@@ -947,7 +947,7 @@ class Xlsform:
                         mismatch = (previous, elem)
                 previous = elem
         if mismatch:
-            joined = u', '.join(sorted([str(i) for i in found]))
+            joined = u', '.join(sorted([unicode(i) for i in found]))
             msg = (u'Languages not consistent. Triggered by "{}" and "{}". '
                    u'All languages found: {}')
             msg = msg.format(mismatch[0], mismatch[1], joined)
