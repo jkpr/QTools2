@@ -27,7 +27,7 @@
 
 Author: James K. Pringle
 E-mail: jpringle@jhu.edu
-Last-modified: 9 March 2017
+Last-modified: 3 Nov 2017
 """
 
 import argparse
@@ -50,7 +50,8 @@ def command_line_interface():
     parser.add_argument('xlsxfile', nargs='+', help=file_help)
 
     reg_help = ('This flag indicates the program should convert to XForm and '
-                'not try to make PMA2020-specific edits.')
+                'not try to enforce PMA-specific naming conventions or make '
+                'linking checks for HQ and FQ.')
     parser.add_argument('-r', '--regular', action='store_true', help=reg_help)
 
     ignore_version_help = ('Ignore versioning in filename, form_id, '
@@ -67,7 +68,8 @@ def command_line_interface():
                         help=linking_warn_help)
 
     extras_help = 'Do not perform extra checks'
-    parser.add_argument('-E', '--no_extras', action='store_true', help=extras_help)
+    parser.add_argument('-E', '--no_extras', action='store_true',
+                        help=extras_help)
 
     noval_help = 'Do not validate XML output with ODK Validate.'
     parser.add_argument('-n', '--no_validate', action='store_true',
@@ -78,8 +80,8 @@ def command_line_interface():
     parser.add_argument('-p', '--preexisting', action='store_true',
                         help=overwrite_help)
 
-    suffix_help = ('A suffix to add to the base file name. Cannot start with a '
-                   'hyphen ("-").')
+    suffix_help = ('A suffix to add to the base file name. Cannot start with '
+                   'a hyphen ("-").')
     parser.add_argument('-s', '--suffix', help=suffix_help)
 
     debug_help = ('Show debug information. Helpful for squashing bugs.')

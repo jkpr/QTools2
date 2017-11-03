@@ -1,3 +1,8 @@
+v0.2.5, 3 November 2017
+ * Support for PHC in PMA naming scheme
+ * Updated docs
+ * Some edge case support for non-string cell values
+
 v0.2.4, 9 March 2017
  * Many new extra checks for better accuracy. Check for:
  * --> Columns with data and no headers
