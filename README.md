@@ -90,6 +90,20 @@ python -m qtools2.convert --help
 | PMA form conversion                                   | `python -m qtools2.convert FILENAME [FILENAME ...]`    |
 | XLSForm-Offline equivalent, convert and validate      | `python -m qtools2.convert -ril FILENAME [FILENAME ...]`     |
 
+#### Options
+| Short Flag | Long Flag | Description |
+| --- | --- | --- |
+| -r | --regular | This flag indicates the program should convert to XForm and not try to make PMA2020-specific edits. |
+| -p | --preexisting | Include this flag to prevent overwriting pre-existing files. |
+| -n | --novalidate | Do not validate XML output with ODK Validate. Do not perform extra checks on (1) data in undefined columns, (2) out of order variable references. |
+| -i | --ignore_version | Ignore versioning in filename, form_id, form_title, and save_form. In other words, the default (without this flag) is to ensure version consistency. |
+| -l | --linking_warn | Produce warnings for incorrect linking directives. Default is to raise an exception and halt the program. |
+| -d | --debug | Show debug information. Helpful for squashing bugs. |
+| -e | --extras | Perform extra checks on (1) data in undefined columns and (2) out of order variable references. |
+| -s | --suffix | A suffix to add to the base file name. Cannot start with a hyphen ("-"). |
+
+## Graphical User Interface
+
 For those who wish to use a GUI initiated from the command line., the QTools2 pipeline begins thusly
 
 ```
