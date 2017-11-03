@@ -13,7 +13,7 @@ The code is necessarily written for Python 2 because it depends on a fork of the
 QTools2 relies on Python 2 for core functionality and Java for ODKValidate. The steps to install are
 
 * Install the most recent version of [Java][2] (currently 1.8). ~~Either the JRE or JDK should work.~~ Only the JDK worked when last tested on Mac (March 2017).
-* Install [Python 2.7][3]. 
+* Install [Python 2.7][3].
 
 Note: the author uses [Homebrew][4] for Python installation on Mac.
 
@@ -21,7 +21,7 @@ Note: the author uses [Homebrew][4] for Python installation on Mac.
 [3]: http://www.python.org/downloads/
 [4]: http://brew.sh/
 
-## Windows-specific steps 
+## Windows-specific steps
 
 Some difficulties arise if `python` and `pip` are not be added automatically to the `PATH` upon installation. Open `CMD` (click start menu, type `CMD`, press enter). Naviagate to your `pip` executable, probably here:
 
@@ -31,7 +31,7 @@ cd C:\Python27\Scripts
 
 Continue with installation or upgrade...
 
-## Installation 
+## Installation
 
 NOTE: Windows users start with the _**Windows-specifc steps**_ section. This package uses a modified version of `pyxform` called `pmaxform` because the PyXForm project thus far has refused to accept this author's pull requests for some simple improvements. Therefore, installation requires *two* commands instead of *one*. Open CMD or Terminal and install relevant packages **separately**, and **in order**
 
@@ -50,7 +50,7 @@ For the latest and greatest, replace `master` in the URLs above with `develop`.
 
 After installation, the code that can convert XLSForms is saved in Python's code library. This means anywhere Python can be accessed, so can `qtools2`.
 
-In order to use `qtools2`, there are two primary ways. The simpler way is to point and click on a specific file ([example specific file][5]) saved in any folder, such as Downloads, to get Python to run that file. The other way is to use the command line. 
+In order to use `qtools2`, there are two primary ways. The simpler way is to point and click on a specific file ([example specific file][5]) saved in any folder, such as Downloads, to get Python to run that file. The other way is to use the command line.
 
 [5]: https://raw.githubusercontent.com/jkpr/QTools2/master/scripts/pma-convert.py
 
@@ -64,12 +64,12 @@ The easiest way to use `qtools2` is to use a file from the `scripts` [folder of 
 
 
 Windows usually associates `.py` files with the Python executable. Thus, a Windows user should only need to double-click the script file icon. That starts the Python interpreter and runs the code.
- 
+
 On a Mac, double clicking a `.py` file usually opens a text editor. To run the file as code, right click the script file icon, then select "Open with > Python Launcher (2.7.12)." The Python version number may be different.
 
 ### Alternative
 
-If the above is too hard, it is possible to achieve the same functionality in a different way. Open up a Python interactive session (perhaps open IDLE, perhaps open Terminal and type `python`). Then copy and paste the same text that is in the desired script into the interpreter, press "Enter," and voila. 
+If the above is too hard, it is possible to achieve the same functionality in a different way. Open up a Python interactive session (perhaps open IDLE, perhaps open Terminal and type `python`). Then copy and paste the same text that is in the desired script into the interpreter, press "Enter," and voila.
 
 
 [6]: https://github.com/jkpr/QTools2/tree/master/scripts
@@ -93,7 +93,7 @@ python -m qtools2.convert --help
 #### Options
 | Short Flag | Long Flag | Description |
 | --- | --- | --- |
-| -r | --regular | This flag indicates the program should convert to XForm and not try to make PMA2020-specific edits. |
+| -r | --regular | This flag indicates the program should convert to XForm and not try to enforce PMA-specific naming conventions or make linking checks for HQ and FQ. |
 | -p | --preexisting | Include this flag to prevent overwriting pre-existing files. |
 | -n | --novalidate | Do not validate XML output with ODK Validate. Do not perform extra checks on (1) data in undefined columns, (2) out of order variable references. |
 | -i | --ignore_version | Ignore versioning in filename, form_id, form_title, and save_form. In other words, the default (without this flag) is to ensure version consistency. |
