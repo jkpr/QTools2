@@ -126,9 +126,7 @@ class Xlsform:
         found = []
         try:
             survey = wb.sheet_by_name(sheet)
-            headers = survey.row_values(0)
-            col = headers.index(header)
-            full_column = survey.col_values(col)
+            full_column = Xlsform.get_column(survey, header)
             found = filter(None, full_column)
         except (xlrd.XLRDError, IndexError, ValueError):
             # No survey found, nothing in survey, header not found
@@ -139,7 +137,8 @@ class Xlsform:
     def get_column(sheet, header):
         headers = sheet.row_values(0)
         col = headers.index(header)
-        return sheet.col_values(col)
+        col_values = sheet.col_values(col)
+        return [unicode(val) for val in col_values]
 
     @staticmethod
     def find_multiple_lists(wb, sheetname):

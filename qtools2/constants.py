@@ -42,7 +42,8 @@ q_codes = {
     "SDP-Questionnaire": "SQ",
     "Listing": "listing",
     "Selection": "sel",
-    "Reinterview-Questionnaire": "RQ"
+    "Reinterview-Questionnaire": "RQ",
+    "PHC-Questionnaire": "PHC"
 }
 
 
@@ -52,7 +53,8 @@ xml_codes = {
     "SQ": "SDP",
     "listing": "listing",
     "sel": "Selection",
-    "RQ": "RQ"
+    "RQ": "RQ",
+    "PHC": "PHC"
 }
 
 
@@ -60,9 +62,9 @@ xml_codes = {
 Regular expressions defining the formulation of form file names and XLSForm
 metadata (and approval date)
 """
-approval_date = 'May 2015'
-form_title_model = "[CC]R[#]-[((Household|Female|SDP|Reinterview)-Questionnaire)|Selection|Listing]-v[##]"
-form_id_model = "[HQ|FQ|SQ|RQ|listing|sel]-[cc]r[#]-v[##]"
+approval_date = 'Sept 2017'
+form_title_model = "[CC]R[#]-[((Household|Female|SDP|Reinterview|PHC)-Questionnaire)|Selection|Listing]-v[##]"
+form_id_model = "[HQ|FQ|SQ|RQ|PHC|listing|sel]-[cc]r[#]-v[##]"
 odk_file_model = form_title_model + "-[SIG]"
 form_title_re = "(" + "|".join(country_codes.values()) + ")R\\d{1,2}-(" + "|".join(q_codes.keys()) +")-v\\d{1,2}"
 form_id_re = "(" + "|".join(q_codes.values()) + ")-(" + "|".join([code.lower() for code in country_codes.values()]) + ")r\\d{1,2}-v\\d{1,2}"
