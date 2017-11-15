@@ -157,7 +157,7 @@ def xlsform_offline(xlsform, validate=True, extras=True):
         m = u'### PyXForm ERROR converting "%s" to XML! ###'
         m %= xlsform.path
         print m
-        print str(e)
+        print unicode(e)
         xlsform.cleanup()
         return False
     except ODKValidateError as e:
