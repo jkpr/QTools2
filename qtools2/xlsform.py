@@ -1005,9 +1005,14 @@ class Xlsform:
             joined = u', '.join(item[3])
             message = u'{} {}'.format(excel, joined)
             by_sheet[item[0]].append(message)
+        all_sheets = []
         for sheet in by_sheet:
             joined = u', '.join(by_sheet[sheet])
             msg = u'{} -> ({})'.format(sheet, joined)
+            all_sheets.append(msg)
+        if all_sheets:
+            all_sheets_message = u', '.join(all_sheets)
+            msg = u'Translation regex mismatch: {}'.format(all_sheets_message)
             m.append(msg)
         return m
 
