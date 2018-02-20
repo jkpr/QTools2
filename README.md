@@ -130,7 +130,7 @@ For the latest and greatest, replace `master` in the URLs above with `develop`.
 Every once in a while, it will be necessary to update `pmaxform`. To do this, use
 
 ```
-pip install https://github.com/jkpr/pmaxsform/zipball/master --upgrade
+pip install https://github.com/jkpr/pmaxform/zipball/master --upgrade
 ```
 
 ### Suggestions and Gotchas
