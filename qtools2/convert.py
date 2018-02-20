@@ -214,7 +214,7 @@ def validate_xpaths(xlsforms, xforms):
         try:
             this_save_instance = xlsform.save_instance[1:]
             not_found = [True] * len(this_save_instance)
-            no_form_id_match = [False] * len(xlsform.save_form)
+            no_form_id_match = [False] * len(xlsform.save_form[1:])
             for i, save_form in enumerate(xlsform.save_form[1:]):
                 try:
                     ind = form_ids.index(save_form)
