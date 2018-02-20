@@ -124,6 +124,23 @@ class XlsformTest(unittest.TestCase):
             b = found
             msg = u'With {}, expected {}, found {}'.format(f, a, b)
             self.assertEqual(a, b, msg=msg)
+
+    def test_find_by_regex_translations(self):
+        """Detect mis-matches by regex in translations."""
+        file_names = {
+            u'NER1-mismatching-regex-translations.xlsx': [
+                (u'survey', 3, 16, ("'${...}'",)),
+                (u'survey', 4, 16, ("'[0-9]+'",)),
+                (u'survey', 6, 16, ("'${...}'",))
+            ]
+        }
+        for f in file_names:
+            wb = xlrd.open_workbook(os.path.join(self.FORM_DIR, f))
+            found = Xlsform.find_by_regex_translations(wb)
+            a = file_names[f]
+            b = found
+            msg = u'With {}, expected {}, found {}'.format(f, a, b)
+            self.assertEqual(a, b, msg=msg)
             
     def test_get_identifiers(self):
         """Test file names and PMA naming conventions"""

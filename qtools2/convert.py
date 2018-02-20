@@ -147,6 +147,7 @@ def xlsform_offline(xlsform, validate=True, extras=True):
             msg.extend(xlsform.extra_unused_choicelist())
             msg.extend(xlsform.extra_same_choices())
             msg.extend(xlsform.extra_missing_translation())
+            msg.extend(xlsform.extra_regex_translation())
             msg.extend(xlsform.extra_language_conflict())
             msg.extend(xlsform.extra_nonascii())
             if msg:

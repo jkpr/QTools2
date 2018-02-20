@@ -27,6 +27,7 @@ import os.path
 import re
 import shutil
 import itertools
+import collections
 
 import xlrd
 from pmaxform.xls2xform import xls2xform_convert
@@ -93,6 +94,8 @@ class Xlsform:
         # Language
         self.language_consistency = self.check_languages(wb)
         self.missing_translations = self.find_missing_translations(wb,
+                self.language_consistency)
+        self.regex_tranlsations = self.find_by_regex_translations(wb,
                 self.language_consistency)
 
     def get_workbook(self):
@@ -425,18 +428,58 @@ class Xlsform:
         return big_d
 
     @staticmethod
+    def translation_pairs(ws, lang_dict):
+        """Iterate over pairs of translations.
+
+        Args:
+            ws: An `xlrd` Sheet instance
+            lang_dict: A language dictionary, built up by this instance
+
+        Yields:
+            A tuple for each translation pair: (eng_row, eng_col, eng_value,
+            other_row, other_col, other_value).
+        """
+        column_pairs = []
+        for k in lang_dict:
+            langs = set(lang_dict[k])  # Work with a copy of the set
+            if len(langs) > 1:
+                if None in langs:
+                    default = k
+                    langs.remove(None)
+                elif u'English' in langs:
+                    default = u'{}::English'.format(k)
+                    langs.remove(u'English')
+                else:
+                    first = min(langs)
+                    default = u'{}::{}'.format(k, first)
+                    langs.remove(first)
+                other_langs = sorted(list(langs))
+                others = [u'{}::{}'.format(k, l) for l in other_langs]
+                for other in others:
+                    column_pairs.append((default, other))
+        headers = ws.row_values(0)
+        pair_inds = [
+            (headers.index(a), headers.index(b)) for (a, b) in column_pairs
+        ]
+        for i in range(ws.nrows):
+            if i == 0:
+                continue
+            this_row = ws.row_values(i)
+            for a, b in pair_inds:
+                a_val = this_row[a]
+                b_val = this_row[b]
+                yield (i, a, a_val, i, b, b_val)
+
+    @staticmethod
     def find_missing_translations(wb, lang_dict=None):
-        """Get the missing translations from a questionnaire
+        """Find missing translations in the workbook.
 
         Args:
             wb: An `xlrd` Book instance
+            lang_dict: The language dictionary for this workbook
 
-        Return:
-            A sequence of tuples (sheetname, row, column, missing). Row and
-            column are zero-indexed integers. Missing is a boolean, true
-            if the translation is missing, false if the translation exists,
-            but the default translation does not exist (usually the default
-            is correct).
+        Returns:
+            A list of tuples of all missing or extraneous translations.
         """
         if not lang_dict:
             lang_dict = Xlsform.check_languages(wb)
@@ -444,49 +487,78 @@ class Xlsform:
         d_choices = lang_dict[constants.CHOICES]
         d_external = lang_dict[constants.EXTERNAL_CHOICES]
 
-        def translation_pairs(d):
-            for k in d:
-                langs = set(d[k])   # Work with a copy of the set
-                if len(langs) > 1:
-                    if None in langs:
-                        default = k
-                        langs.remove(None)
-                    elif u'English' in langs:
-                        default = u'{}::English'.format(k)
-                        langs.remove(u'English')
-                    else:
-                        first = min(langs)
-                        default = u'{}::{}'.format(k, first)
-                        langs.remove(first)
-                    other_langs = sorted(list(langs))
-                    others = [u'{}::{}'.format(k, l) for l in other_langs]
-                    for other in others:
-                        yield default, other
-
         def missing_by_sheet(d, wb, sheetname):
             missing = []
             sheet = wb.sheet_by_name(sheetname)
-            headers = sheet.row_values(0)
-            pairs = list(translation_pairs(d))
-            pair_inds = [
-                (headers.index(a), headers.index(b)) for (a, b) in pairs
-            ]
-            for i in range(sheet.nrows):
-                if i == 0:
-                    continue
-                this_row = sheet.row_values(i)
-                for a, b in pair_inds:
-                    a_val = this_row[a]
-                    b_val = this_row[b]
-                    if a_val and not b_val:
-                        missing.append((sheetname, i, b, True))
-                    elif not a_val and b_val:
-                        missing.append((sheetname, i, b, False))
+            for pair in Xlsform.translation_pairs(sheet, d):
+                a_val = pair[2]
+                b_val = pair[5]
+                if a_val and not b_val:
+                    missing.append((sheetname, pair[3], pair[4], True))
+                elif not a_val and b_val:
+                    missing.append((sheetname, pair[3], pair[4], False))
             return missing
 
         missing = []
         if d_survey:
-            l = missing_by_sheet(d_survey,wb, constants.SURVEY)
+            l = missing_by_sheet(d_survey, wb, constants.SURVEY)
+            missing.extend(l)
+        if d_choices:
+            l = missing_by_sheet(d_choices, wb, constants.CHOICES)
+            missing.extend(l)
+        if d_external:
+            l = missing_by_sheet(d_external, wb, constants.EXTERNAL_CHOICES)
+            missing.extend(l)
+        return missing
+
+    @staticmethod
+    def find_by_regex_translations(wb, lang_dict=None):
+        """Find missing items by regex in translations in the workbook.
+
+        Args:
+            wb: An `xlrd` Book instance
+            lang_dict: The language dictionary for this workbook
+
+        Returns:
+            A list of tuples of all mis-matching items identified by regex.
+        """
+
+        regex_list = [
+            r'\$\{(.*?)\}',
+            r'\d+'
+        ]
+        regex_prog = [re.compile(pattern) for pattern in regex_list]
+        regex_desc = [
+            "'${...}'",
+            "'[0-9]+'"
+        ]
+
+        if not lang_dict:
+            lang_dict = Xlsform.check_languages(wb)
+        d_survey = lang_dict[constants.SURVEY]
+        d_choices = lang_dict[constants.CHOICES]
+        d_external = lang_dict[constants.EXTERNAL_CHOICES]
+
+        def missing_by_sheet(d, wb, sheetname):
+            missing = []
+            sheet = wb.sheet_by_name(sheetname)
+            for pair in Xlsform.translation_pairs(sheet, d):
+                fails = []
+                a_val = pair[2]
+                b_val = pair[5]
+                for regex, prog in zip(regex_desc, regex_prog):
+                    a_found = sorted(prog.findall(a_val))
+                    b_found = sorted(prog.findall(b_val))
+                    if a_found != b_found:
+                        fails.append(regex)
+                if fails:
+                    record = sheetname, pair[3], pair[4], tuple(fails)
+                    missing.append(record)
+            return missing
+
+        missing = []
+        if d_survey:
+            l = missing_by_sheet(d_survey, wb, constants.SURVEY)
             missing.extend(l)
         if d_choices:
             l = missing_by_sheet(d_choices, wb, constants.CHOICES)
@@ -914,6 +986,28 @@ class Xlsform:
         if extraneous_formatted:
             joined = u', '.join(extraneous_formatted)
             msg = u'Extraneous translations detected: {}'.format(joined)
+            m.append(msg)
+        return m
+
+    def extra_regex_translation(self):
+        """Warn about mismatching regex finds in translations.
+
+        Generates a list of warnings to be displayed to the user.
+
+        Return:
+            A list of string, or empty if nothing to report
+        """
+        m = []
+        by_sheet = collections.defaultdict(list)
+        for item in self.regex_tranlsations:
+            excel_col = Xlsform.number_to_excel_column(item[2])
+            excel = u'{}{}'.format(excel_col, item[1] + 1)
+            joined = u', '.join(item[3])
+            message = u'{} {}'.format(excel, joined)
+            by_sheet[item[0]].append(message)
+        for sheet in by_sheet:
+            joined = u', '.join(by_sheet[sheet])
+            msg = u'{} -> ({})'.format(sheet, joined)
             m.append(msg)
         return m
 
