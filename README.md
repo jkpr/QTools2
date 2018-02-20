@@ -54,7 +54,7 @@ In order to use `qtools2`, there are two primary ways. The simpler way is to poi
 
 [5]: https://raw.githubusercontent.com/jkpr/QTools2/master/scripts/pma-convert.py
 
-## Easiest way to use `qtools2` for PMA2020 forms
+## Easiest way to use `qtools2` for PMA2020 forms on Windows
 
 The easiest way to use `qtools2` is to use a file from the `scripts` [folder of this repository][6]. In order to download a script, click its link, then click "Raw," then save the contents (in the browser, File > Save). The table below explains what is available.
 
@@ -74,6 +74,21 @@ If the above is too hard, it is possible to achieve the same functionality in a 
 
 [6]: https://github.com/jkpr/QTools2/tree/master/scripts
 [7]: https://gumroad.com/l/xlsform-offline
+
+## Easiest way to use `qtools2` on a Mac (also on Windows)
+
+For those who wish to use a GUI initiated from the command line, the QTools2 pipeline begins thusly
+
+```
+python -m qtools2
+```
+
+and check the usage by adding the `--help` flag to the above command.
+
+It is possible to use this command on Windows. The Windows-specific steps may be needed.
+
+NOTE: the `-v2` option has been removed as of 0.2.3.
+
 
 ## Command-line usage
 
@@ -102,18 +117,6 @@ python -m qtools2.convert --help
 | -e | --extras | Perform extra checks on (1) data in undefined columns and (2) out of order variable references. |
 | -s | --suffix | A suffix to add to the base file name. Cannot start with a hyphen ("-"). |
 
-## Graphical User Interface
-
-For those who wish to use a GUI initiated from the command line., the QTools2 pipeline begins thusly
-
-```
-python -m qtools2
-```
-
-and check the usage by adding the `--help` flag to the above command.
-
-NOTE: the `-v2` option has been removed as of 0.2.3.
-
 ## Updates
 
 NOTE: Windows users start with the _**Windows-specifc steps**_ section. To install `qtools2` updates, use
@@ -123,6 +126,12 @@ pip install https://github.com/jkpr/QTools2/zipball/master --upgrade
 ```
 
 For the latest and greatest, replace `master` in the URLs above with `develop`.
+
+Every once in a while, it will be necessary to update `pmaxform`. To do this, use
+
+```
+pip install https://github.com/jkpr/pmaxsform/zipball/master --upgrade
+```
 
 ### Suggestions and Gotchas
 
@@ -136,6 +145,7 @@ For the latest and greatest, replace `master` in the URLs above with `develop`.
 - A dependency of `pmaxform` is `lxml`, which can cause problems on Mac. If there are problems, the best guide is on [StackOverflow][8].
 - During installation of `pmaxform` on Mac, the user may be prompted to install Xcode's Command Line Tools. This should be enough for `lxml`.
 - Qtools2 may run without Java. Java is only needed for ODK Validate, which can be bypassed by using the "No validate" option.
+- Xcode 9 presents issues with missing header files. If at all possible, install Xcode 8.
 
 [8]: http://stackoverflow.com/questions/19548011/cannot-install-lxml-on-mac-os-x-10-9
 
