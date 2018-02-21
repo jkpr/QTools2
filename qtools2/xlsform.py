@@ -546,6 +546,10 @@ class Xlsform:
                 fails = []
                 a_val = pair[2]
                 b_val = pair[5]
+                if not isinstance(a_val, (str, unicode)):
+                    a_val = unicode(a_val)
+                if not isinstance(b_val, (str, unicode)):
+                    b_val = unicode(b_val)
                 for regex, prog in zip(regex_desc, regex_prog):
                     a_found = sorted(prog.findall(a_val))
                     b_found = sorted(prog.findall(b_val))
@@ -1002,7 +1006,7 @@ class Xlsform:
         for item in self.regex_tranlsations:
             excel_col = Xlsform.number_to_excel_column(item[2])
             excel = u'{}{}'.format(excel_col, item[1] + 1)
-            joined = u', '.join(item[3])
+            joined = u' '.join(item[3])
             message = u'{} {}'.format(excel, joined)
             by_sheet[item[0]].append(message)
         all_sheets = []
