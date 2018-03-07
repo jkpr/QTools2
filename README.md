@@ -117,6 +117,29 @@ python -m qtools2.convert --help
 | -e | --extras | Perform extra checks on (1) data in undefined columns and (2) out of order variable references. |
 | -s | --suffix | A suffix to add to the base file name. Cannot start with a hyphen ("-"). |
 
+## Extras
+
+### Translation Regex Mismatches
+These QTools2 conversion warning messages appear whenever there is a discrepancy between translations with respect to numbering, i.e. `'[0-9]+'`, and/or variables, i.e. `'${...}'`.
+
+*Example - Numbering Mismatch*
+
+In this example, the warning `'[0-9]+'` will appear, because "0" is not the same things as "zero". To fix this, please ensure that ALL languages use only arabic numerals (e.g. 1, 2, 3...), or only word-based numbering (e.g. one, two, three...).
+  * English: Please enter 0.
+  * Bad Pidgin English: Please enter zero.
+
+*Example - Variable Mismatch*
+
+ODK variables should never be translated. If the main language shows "${months}", all language translations should also show "${months}". Of course, what the user sees on the phone will still be translated.
+  * English: Enter ${months}.
+  * Bad French: Entrez ${mois}.
+
+*Example - Variable Mismatch*
+
+Translations should use all variables that the English uses.
+  * English: There are ${hh_count} people in the household
+  * Bad Pidgin English: There are (ODK will fill in a count) people in the household
+
 ## Updates
 
 NOTE: Windows users start with the _**Windows-specifc steps**_ section. To install `qtools2` updates, use
