@@ -54,7 +54,7 @@ In order to use `qtools2`, there are two primary ways. The simpler way is to poi
 
 [5]: https://raw.githubusercontent.com/jkpr/QTools2/master/scripts/pma-convert.py
 
-## Easiest way to use `qtools2` for PMA2020 forms
+## Easiest way to use `qtools2` for PMA2020 forms on Windows
 
 The easiest way to use `qtools2` is to use a file from the `scripts` [folder of this repository][6]. In order to download a script, click its link, then click "Raw," then save the contents (in the browser, File > Save). The table below explains what is available.
 
@@ -74,6 +74,21 @@ If the above is too hard, it is possible to achieve the same functionality in a 
 
 [6]: https://github.com/jkpr/QTools2/tree/master/scripts
 [7]: https://gumroad.com/l/xlsform-offline
+
+## Easiest way to use `qtools2` on a Mac (also on Windows)
+
+For those who wish to use a GUI initiated from the command line, the QTools2 pipeline begins thusly
+
+```
+python -m qtools2
+```
+
+and check the usage by adding the `--help` flag to the above command.
+
+It is possible to use this command on Windows. The Windows-specific steps may be needed.
+
+NOTE: the `-v2` option has been removed as of 0.2.3.
+
 
 ## Command-line usage
 
@@ -102,17 +117,28 @@ python -m qtools2.convert --help
 | -e | --extras | Perform extra checks on (1) data in undefined columns and (2) out of order variable references. |
 | -s | --suffix | A suffix to add to the base file name. Cannot start with a hyphen ("-"). |
 
-## Graphical User Interface
+## Extras
 
-For those who wish to use a GUI initiated from the command line., the QTools2 pipeline begins thusly
+### Translation Regex Mismatches
+These QTools2 conversion warning messages appear whenever there is a discrepancy between translations with respect to numbering, i.e. `'[0-9]+'`, and/or variables, i.e. `'${...}'`.
 
-```
-python -m qtools2
-```
+*Example - Numbering Mismatch*
 
-and check the usage by adding the `--help` flag to the above command.
+In this example, the warning `'[0-9]+'` will appear, because "0" is not the same things as "zero". To fix this, please ensure that ALL languages use only arabic numerals (e.g. 1, 2, 3...), or only word-based numbering (e.g. one, two, three...).
+  * English: Please enter 0.
+  * Bad Pidgin English: Please enter zero.
 
-NOTE: the `-v2` option has been removed as of 0.2.3.
+*Example - Variable Mismatch*
+
+ODK variables should never be translated. If the main language shows "${months}", all language translations should also show "${months}". Of course, what the user sees on the phone will still be translated.
+  * English: Enter ${months}.
+  * Bad French: Entrez ${mois}.
+
+*Example - Variable Mismatch*
+
+Translations should use all variables that the English uses.
+  * English: There are ${hh_count} people in the household
+  * Bad Pidgin English: There are (ODK will fill in a count) people in the household
 
 ## Updates
 
@@ -123,6 +149,12 @@ pip install https://github.com/jkpr/QTools2/zipball/master --upgrade
 ```
 
 For the latest and greatest, replace `master` in the URLs above with `develop`.
+
+Every once in a while, it will be necessary to update `pmaxform`. To do this, use
+
+```
+pip install https://github.com/jkpr/pmaxform/zipball/master --upgrade
+```
 
 ### Suggestions and Gotchas
 
@@ -136,6 +168,7 @@ For the latest and greatest, replace `master` in the URLs above with `develop`.
 - A dependency of `pmaxform` is `lxml`, which can cause problems on Mac. If there are problems, the best guide is on [StackOverflow][8].
 - During installation of `pmaxform` on Mac, the user may be prompted to install Xcode's Command Line Tools. This should be enough for `lxml`.
 - Qtools2 may run without Java. Java is only needed for ODK Validate, which can be bypassed by using the "No validate" option.
+- Xcode 9 presents issues with missing header files. If at all possible, install Xcode 8.
 
 [8]: http://stackoverflow.com/questions/19548011/cannot-install-lxml-on-mac-os-x-10-9
 

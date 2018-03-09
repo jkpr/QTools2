@@ -147,6 +147,7 @@ def xlsform_offline(xlsform, validate=True, extras=True):
             msg.extend(xlsform.extra_unused_choicelist())
             msg.extend(xlsform.extra_same_choices())
             msg.extend(xlsform.extra_missing_translation())
+            msg.extend(xlsform.extra_regex_translation())
             msg.extend(xlsform.extra_language_conflict())
             msg.extend(xlsform.extra_nonascii())
             if msg:
@@ -157,7 +158,7 @@ def xlsform_offline(xlsform, validate=True, extras=True):
         m = u'### PyXForm ERROR converting "%s" to XML! ###'
         m %= xlsform.path
         print m
-        print str(e)
+        print unicode(e)
         xlsform.cleanup()
         return False
     except ODKValidateError as e:
@@ -213,7 +214,7 @@ def validate_xpaths(xlsforms, xforms):
         try:
             this_save_instance = xlsform.save_instance[1:]
             not_found = [True] * len(this_save_instance)
-            no_form_id_match = [False] * len(xlsform.save_form)
+            no_form_id_match = [False] * len(xlsform.save_form[1:])
             for i, save_form in enumerate(xlsform.save_form[1:]):
                 try:
                     ind = form_ids.index(save_form)
