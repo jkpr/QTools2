@@ -1,3 +1,8 @@
+v0.2.6, 9 March 2018
+ * Translation comparison by regex for numbers and variables
+ * Docs updates
+ * Small edge-case bugs
+
 v0.2.5, 3 November 2017
  * Support for PHC in PMA naming scheme
  * Updated docs
