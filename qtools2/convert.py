@@ -213,24 +213,20 @@ def validate_xpaths(xlsforms, xforms):
     for xlsform in xlsforms:
         try:
             this_save_instance = xlsform.save_instance[1:]
+            this_save_form = xlsform.save_form[1:]
             not_found = [True] * len(this_save_instance)
-            no_form_id_match = [False] * len(xlsform.save_form[1:])
-            for i, save_form in enumerate(xlsform.save_form[1:]):
-                try:
+            for save_form in this_save_form:
+                if save_form not in form_ids:
+                    m = u'"{}" defines save_form with non-existent form_id "{}"'
+                    m = m.format(xlsform.path, save_form)
+                    raise XformError(m)
+                else:
                     ind = form_ids.index(save_form)
                     match = xforms[ind]
                     found, msg = match.discover_all(this_save_instance)
                     not_found = [a and not b for a, b in zip(not_found, found)]
                     if msg:
                         findings.extend(msg)
-                except ValueError:
-                    # Form id could match a different form
-                    no_form_id_match[i] = True
-                    pass
-            if all(no_form_id_match) and len(no_form_id_match) > 0:
-                m = u'"{}" defines save_form with non-existent form_id "{}"'
-                m = m.format(xlsform.path, xlsform.save_form[0])
-                raise XformError(m)
             to_report = itertools.compress(this_save_instance, not_found)
             for item in to_report:
                 m = u'From "{}", unable to find "{}" in designated child XForm'

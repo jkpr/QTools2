@@ -1,3 +1,7 @@
+v0.2.7, 7 September 2019
+ * Fix error related to checking "save_form" ids and messaging
+ * Improve docs
+
 v0.2.6, 9 March 2018
  * Translation comparison by regex for numbers and variables
  * Docs updates
