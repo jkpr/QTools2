@@ -83,7 +83,11 @@ For those who wish to use a GUI initiated from the command line, the QTools2 pip
 python -m qtools2
 ```
 
-and check the usage by adding the `--help` flag to the above command.
+> ![qtools2-gui](docs/qtools2-gui-mac_526x360.png)
+>
+> _Screenshot of the QTool2 graphical user interface._
+
+You can check the usage by adding the `--help` flag to the above command.
 
 It is possible to use this command on Windows. The Windows-specific steps may be needed.
 
